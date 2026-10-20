@@ -1,0 +1,23 @@
+# Local MySQL server for development and for running the test suite against
+# the target database (`composer test:mysql`). Credentials are read from .env.
+services:
+    mysql:
+        image: mysql:8.4
+        ports:
+            - "127.0.0.1:${DB_PORT:-3306}:3306"
+        environment:
+            MYSQL_DATABASE: "${DB_DATABASE:-atelier_noir}"
+            MYSQL_USER: "${DB_USERNAME:-atelier}"
+            MYSQL_PASSWORD: "${DB_PASSWORD:?Set DB_PASSWORD in .env}"
+            MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+        volumes:
+            - mysql-data:/var/lib/mysql
+            - ./docker/mysql/init:/docker-entrypoint-initdb.d:ro
+        healthcheck:
+            test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u\"$$MYSQL_USER\" -p\"$$MYSQL_PASSWORD\" --silent"]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+volumes:
+    mysql-data:
