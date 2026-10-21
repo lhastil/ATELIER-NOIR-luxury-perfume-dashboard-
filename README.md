@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login, product management, customers and orders are in place. The dashboard still shows empty states: it is connected to the stored data in a later phase. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login, product management, customers, orders and the dashboard figures and charts are in place. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
@@ -10,17 +10,17 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | --- | --- |
 | Laravel 13 foundation, MySQL setup, test tooling | Done |
 | Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
-| Dashboard structure and reusable content components (empty states until store data exists) | Done |
+| Dashboard structure and reusable content components | Done |
 | Admin authentication (login, logout, login throttling, protected routes) | Done |
 | Products (create, edit, delete, image upload, search, filters, pagination) and seeded categories | Done |
 | Customers (search, details, order history) and orders (search, status filter, details, totals, status updates) | Done |
-| Dashboard analytics (revenue and order charts) | Planned |
+| Dashboard figures, revenue and order charts (Chart.js), recent orders and best sellers from the stored data | Done |
 | Messages, profile, password change and store settings | Planned |
 
 ## Technology stack
 
 - **Backend:** PHP 8.3+, Laravel 13
-- **Frontend:** Blade templates, HTML, custom CSS and vanilla JavaScript, bundled with Vite. Chart.js will be added for the dashboard. No CSS or JS framework.
+- **Frontend:** Blade templates, HTML, custom CSS and vanilla JavaScript, bundled with Vite. Chart.js draws the dashboard charts and is loaded only on pages that have a chart. No CSS or JS framework.
 - **Typography and icons:** Cormorant Garamond and Inter (self-hosted via Fontsource), Lucide icons as inline SVG
 - **Database:** MySQL 8.4 (target). Automated tests run on SQLite in memory by default, and can also run against MySQL.
 - **Testing and quality:** PHPUnit 12, Laravel Pint
@@ -148,7 +148,7 @@ Standard Laravel layout, plus:
 - `resources/css/layout/`: application shell, sidebar and top navigation
 - `resources/css/components/`: styles for shared layout and content components
 - `resources/css/pages/`: page-specific layout (dashboard, login, products, orders)
-- `resources/js/ui/`: navigation drawer, dropdown, scrollable-table, image preview and delete-confirmation behaviour (vanilla JavaScript)
+- `resources/js/ui/`: navigation drawer, dropdown, scrollable-table, image preview, delete-confirmation and dashboard chart behaviour (vanilla JavaScript)
 - `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `form/*`, `icon`, `avatar`, `badge`, `flash`, `dropdown`, `page-header`, `card`, `stat-card`, `chart-panel`, `empty-state`, `table`)
 - `resources/views/products/`, `customers/`, `orders/`: the admin pages
 - `compose.yaml`: local MySQL server
@@ -177,7 +177,25 @@ Each order item keeps its own copy of the product name, SKU and unit price from 
   Image links are built from `APP_URL`, so set it to the address you open the panel at (for example `http://localhost:8000` with `php artisan serve`), and run `php artisan storage:link` once.
 - **Order statuses** are `pending`, `processing`, `shipped`, `delivered` and `cancelled` (`Order::STATUSES`). An administrator can set any of them on the order page; other values are rejected. Changing a status does not change product stock.
 - **Order totals** are always calculated from the stored order items (quantity × unit price, added up in whole cents); no separate total is stored.
-- **Revenue** is not calculated anywhere yet. When the dashboard is connected to the data, it will count only orders with the status `delivered`; pending, processing, shipped and cancelled orders will be excluded.
+- **Revenue** counts only orders with the status `delivered` (`Order::delivered()`); pending, processing, shipped and cancelled orders are excluded. It is added up in whole cents from the order items' stored quantities and unit prices, and formatted in euros only for display.
+- **Revenue month:** there is no delivery date, so a delivered order's revenue is counted in the month the order was **placed** (`placed_at`), not the month it was delivered.
+
+### Dashboard figures
+
+All figures are read from the database on each visit; nothing is stored or cached.
+
+| Section | Rule |
+| --- | --- |
+| Total Revenue | Revenue from every delivered order, all time. |
+| Total Orders | Every order, in all five statuses. |
+| Products in Catalog | Every product, hidden ones included; the number of active products is shown below it. |
+| Total Customers | Every customer. |
+| Revenue chart | Delivered revenue per calendar month of `placed_at` (UTC) for the last six months, including the current month. Months without delivered orders show €0. |
+| Order Analytics | The number of orders in each status, in the fixed order pending, processing, shipped, delivered, cancelled, including statuses with no orders. |
+| Recent Orders | The five newest orders by `placed_at`, newest first (the most recently created first when two have the same time). |
+| Best Sellers | The five products with the most units in **delivered** orders, grouped by the SKU stored on the order item and shown with its stored product name, so products deleted since still count. If a product was renamed between orders, the name from its most recently placed delivered order is shown (the most recently created order or item when two share a time). Ties in units are ordered by SKU. |
+
+The key figures show their real value, including `0` and `€0.00`. The charts and lists show an explanatory empty state when they have nothing to display. Each chart also lists its figures in a table for screen readers, and chart animation is switched off when the system asks for reduced motion. Without JavaScript, or if the chart script cannot be loaded, each chart panel shows a short note and its figures as a visible table instead.
 
 ## Design system
 
@@ -191,7 +209,8 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 
 ## Known limitations
 
-- The dashboard is not connected to the stored data yet: every key figure, chart and list shows an empty state, even though products, customers and orders exist. Charts (Chart.js) and real figures are added in a later phase.
+- The dashboard has no date filter or comparison with earlier periods. The sample orders are dated relative to the day they were first seeded, so as time passes their revenue moves out of the six-month chart.
+- The dashboard loads every delivered order with its items to add up revenue, which is fine for a store of this size but would need a database-level sum for a very large order history.
 - Sections that are not built yet appear in the navigation as unavailable.
 - Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. The only administrator account is the local demo account created by the seeder; a production installation needs another way to create its first administrator, which is planned for the deployment phase.
 - The search field in the top bar is not connected yet; products are searched and filtered on the Products page.
