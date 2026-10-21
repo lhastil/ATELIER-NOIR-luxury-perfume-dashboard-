@@ -61,7 +61,7 @@
  * (html without .js), or when charts.js marks the figure .is-unavailable, the
  * chart box is hidden and the note and table are shown instead.
  */
-/* min-width: 0 lets the figure shrink inside the panel's grid, like .chart below. */
+/* min-width: 0 lets the figure shrink inside the panel's grid, like .chart above. */
 .chart-figure {
     min-width: 0;
 }

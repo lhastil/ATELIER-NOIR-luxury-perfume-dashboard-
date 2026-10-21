@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login, product management, customers, orders and the dashboard figures and charts are in place. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
+> **Project status:** the Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), administrator login, product management, customers, orders and the dashboard figures and charts are in place. The features marked as planned below are not built yet.
 
 ## Features
 
@@ -27,7 +27,7 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 
 ## Prerequisites
 
-- PHP 8.3 or newer with the `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl` and `fileinfo` extensions (`gd` will be needed once product image uploads are added)
+- PHP 8.3 or newer with the `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl` and `fileinfo` extensions, plus `gd` for the test suite (it creates fake product images)
 - Composer 2
 - Node.js 22.13+ and npm
 - MySQL 8.4, either installed locally or through Docker (a `compose.yaml` is included)
@@ -205,7 +205,7 @@ The layout has three breakpoints: desktop (1024px and up) with a persistent 248p
 
 ## License
 
-Released under the [MIT License](LICENSE). Third-party fonts and icons are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Released under the [MIT License](LICENSE). Third-party fonts, icons and the Chart.js library are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Known limitations
 
@@ -213,7 +213,7 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 - The dashboard loads every delivered order with its items to add up revenue, which is fine for a store of this size but would need a database-level sum for a very large order history.
 - Sections that are not built yet appear in the navigation as unavailable.
 - Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. The only administrator account is the local demo account created by the seeder; a production installation needs another way to create its first administrator, which is planned for the deployment phase.
-- The search field in the top bar is not connected yet; products are searched and filtered on the Products page.
+- The search field in the top bar is not connected: it is shown disabled. Products, customers and orders each have their own search on their list page.
 - Categories are fixed by the seeder; there is no page to add or rename them.
 - Customers and orders are read-only apart from the order status: there are no pages to add, edit or delete them, and orders come only from the seeder.
-- Screenshots will be added once the interface is built.
+- The README has no screenshots.

@@ -14,12 +14,12 @@
     </div>
 
     <div class="topbar__actions">
-        {{-- Search is connected once the catalogue exists; until then the field is shown disabled. --}}
+        {{-- Store-wide search is not built, so the field is shown disabled; each list page has its own search. --}}
         <form class="topbar-search" role="search">
             <label class="visually-hidden" for="topbar-search">Search</label>
             <x-icon name="search" :size="16" />
             <input id="topbar-search" class="topbar-search__input" type="search" placeholder="Search the atelier" disabled aria-describedby="topbar-search-hint">
-            <span id="topbar-search-hint" class="visually-hidden">Search becomes available with the product catalogue.</span>
+            <span id="topbar-search-hint" class="visually-hidden">Store-wide search is not available. Use the search on the Products, Customers and Orders pages.</span>
         </form>
 
         <x-dropdown id="notifications-panel" label="Notifications">
