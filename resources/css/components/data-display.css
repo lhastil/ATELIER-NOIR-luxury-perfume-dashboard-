@@ -190,6 +190,61 @@
     }
 }
 
+/* Primary link inside a table row, such as a product, customer or order name. */
+.table-link {
+    color: var(--color-text);
+}
+
+.table-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Small secondary line under a table cell's main text. */
+.table-meta {
+    display: block;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.row-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-1);
+}
+
+.empty-state a {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* Label and value pairs, such as a customer's contact details. */
+.detail-list {
+    display: grid;
+    gap: var(--space-4);
+    margin: 0;
+}
+
+.detail-list dt {
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.detail-list dd {
+    margin: var(--space-1) 0 0;
+    overflow-wrap: anywhere;
+}
+
+.detail-list a {
+    color: var(--color-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* Badge: small, quiet status label. */
 .badge {
     display: inline-flex;

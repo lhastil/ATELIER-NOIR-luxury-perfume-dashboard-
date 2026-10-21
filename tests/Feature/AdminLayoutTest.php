@@ -50,12 +50,12 @@ class AdminLayoutTest extends TestCase
 
     public function test_sections_without_a_route_are_not_rendered_as_links(): void
     {
-        $this->assertFalse(Route::has('orders.index'));
+        $this->assertFalse(Route::has('messages.index'));
 
         $this->dashboard()
             ->assertSee('<span class="nav-item" data-unavailable>', false)
-            ->assertSee('Orders<span class="visually-hidden"> (not available yet)</span>', false)
-            ->assertDontSee('href="'.url('/orders').'"', false);
+            ->assertSee('Messages<span class="visually-hidden"> (not available yet)</span>', false)
+            ->assertDontSee('href="'.url('/messages').'"', false);
     }
 
     public function test_drawer_controls_reference_the_sidebar(): void

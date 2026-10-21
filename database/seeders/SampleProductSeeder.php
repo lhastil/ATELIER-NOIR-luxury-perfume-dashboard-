@@ -16,6 +16,12 @@ class SampleProductSeeder extends Seeder
 {
     public function run(): void
     {
+        if (app()->isProduction()) {
+            $this->command?->warn('Skipped: sample products are never created in production.');
+
+            return;
+        }
+
         // The products need their categories, so this seeder also works on its own.
         $this->call(CategorySeeder::class);
 

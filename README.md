@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login and product management are in place. The dashboard shows empty states until order data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login, product management, customers and orders are in place. The dashboard still shows empty states: it is connected to the stored data in a later phase. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
@@ -13,7 +13,7 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | Dashboard structure and reusable content components (empty states until store data exists) | Done |
 | Admin authentication (login, logout, login throttling, protected routes) | Done |
 | Products (create, edit, delete, image upload, search, filters, pagination) and seeded categories | Done |
-| Customers, orders and order items (status updates, totals) | Planned |
+| Customers (search, details, order history) and orders (search, status filter, details, totals, status updates) | Done |
 | Dashboard analytics (revenue and order charts) | Planned |
 | Messages, profile, password change and store settings | Planned |
 
@@ -88,14 +88,24 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Seeding creates the demo administrator described below, the product categories and the sample catalog. It can be run again safely: nothing is duplicated, and products you have edited are not overwritten. Running it again does reset the demo administrator's name and password to the values below.
+Seeding creates the product categories, the demo administrator described below and the sample catalog, customers and orders. It can be run again safely: nothing is duplicated, products you have edited are not overwritten, and order statuses you have changed are kept. Running it again does reset the demo administrator's name and password to the values below.
+
+In production (`APP_ENV=production`), `php artisan db:seed --force` creates only the five categories: the demo administrator and all sample data seeders skip themselves there.
 
 ### Sample data
 
-The seeded catalog is **sample data for demonstration**: 15 fictional perfumes from fictional brands, spread over five categories (Floral, Woody, Amber, Fresh and Gourmand). It contains no real products, prices or stock levels, and the sample products have no images. Products created in the panel are stored the same way and behave exactly like the seeded ones.
+The seeded catalog, customers and orders are **sample data for demonstration**:
+
+- 15 fictional perfumes from fictional brands, spread over five categories (Floral, Woody, Amber, Fresh and Gourmand), with no images. There are no real products, prices or stock levels.
+- 24 fictional customers. Email addresses use the reserved `example.test` domain. Phone numbers come from the `06 39 98` block that Arcep, the French telecoms regulator, reserves for films and other fiction; they are stored in international format (`+33639980001`) and shown in the French format (`06 39 98 00 01`). Customer search finds a phone number typed with or without spaces, and with either `06…` or `+33 6…`. Three customers have no orders yet.
+- 40 orders (`ORD-10001` to `ORD-10040`) with one to three items each, across every order status. Order dates count back up to 118 days from the day the orders are first seeded.
+
+Records created or changed in the panel are stored the same way and behave exactly like the seeded ones.
 
 - `database/seeders/CategorySeeder.php`: the five categories. Categories have no management page yet, so this seeder is also needed on a fresh installation.
 - `database/seeders/SampleProductSeeder.php`: the sample products (`php artisan db:seed --class=SampleProductSeeder`, which also seeds the categories). Sample products are matched by SKU, so if you change a sample product's SKU in the panel, the next seed run adds the original sample again.
+- `database/seeders/CustomerSeeder.php`: the sample customers, matched by email.
+- `database/seeders/SampleOrderSeeder.php`: the sample orders (`php artisan db:seed --class=SampleOrderSeeder`, which also seeds the customers, products and categories). Orders are matched by number, and items are added only when an order is first created.
 
 ### Demo administrator (local only)
 
@@ -137,18 +147,37 @@ Standard Laravel layout, plus:
 - `resources/css/base/`: design tokens (`tokens.css`), fonts and global styles
 - `resources/css/layout/`: application shell, sidebar and top navigation
 - `resources/css/components/`: styles for shared layout and content components
-- `resources/css/pages/`: page-specific layout (dashboard grid)
-- `resources/js/ui/`: navigation drawer, dropdown and scrollable-table behaviour (vanilla JavaScript)
-- `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `icon`, `avatar`, `dropdown`, `page-header`, `card`, `stat-card`, `chart-panel`, `empty-state`, `table`)
+- `resources/css/pages/`: page-specific layout (dashboard, login, products, orders)
+- `resources/js/ui/`: navigation drawer, dropdown, scrollable-table, image preview and delete-confirmation behaviour (vanilla JavaScript)
+- `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `form/*`, `icon`, `avatar`, `badge`, `flash`, `dropdown`, `page-header`, `card`, `stat-card`, `chart-panel`, `empty-state`, `table`)
+- `resources/views/products/`, `customers/`, `orders/`: the admin pages
 - `compose.yaml`: local MySQL server
 - `docker/mysql/init/`: one-time MySQL initialisation (creates the testing database)
+
+## Database relationships
+
+The Eloquent relationships defined in `app/Models`:
+
+| Model | Relationship | Purpose |
+| --- | --- | --- |
+| `Category` | `products()`: has many `Product` | The products in a perfume family. |
+| `Product` | `category()`: belongs to `Category` | The family a product is listed under. A category cannot be deleted while products use it. |
+| `Customer` | `orders()`: has many `Order` | A customer's order history. A customer cannot be deleted while they have orders. |
+| `Order` | `customer()`: belongs to `Customer` | Who placed the order. |
+| `Order` | `items()`: has many `OrderItem` | The product lines of the order; they are deleted together with the order. |
+| `OrderItem` | `order()`: belongs to `Order` | The order the line belongs to. |
+| `OrderItem` | `product()`: belongs to `Product` | The catalog product, used to link to it. It is empty once the product has been deleted. |
+
+Each order item keeps its own copy of the product name, SKU and unit price from when the order was placed, so editing or deleting a product never changes an existing order.
 
 ## Business rules
 
 - **Prices** are shown in euros. The currency is set once, with `APP_CURRENCY` in `.env` (read in `config/app.php`).
 - **Product images** are stored on Laravel's `public` disk in `storage/app/public/products`. Replacing or removing an image, or deleting its product, deletes only that product's file.
   Image links are built from `APP_URL`, so set it to the address you open the panel at (for example `http://localhost:8000` with `php artisan serve`), and run `php artisan storage:link` once.
-- **Revenue** counts only orders with the status `delivered`. Pending, processing, cancelled and refunded orders are excluded. The rule will live in one place in the code when orders are implemented, so it can be changed deliberately.
+- **Order statuses** are `pending`, `processing`, `shipped`, `delivered` and `cancelled` (`Order::STATUSES`). An administrator can set any of them on the order page; other values are rejected. Changing a status does not change product stock.
+- **Order totals** are always calculated from the stored order items (quantity × unit price, added up in whole cents); no separate total is stored.
+- **Revenue** is not calculated anywhere yet. When the dashboard is connected to the data, it will count only orders with the status `delivered`; pending, processing, shipped and cancelled orders will be excluded.
 
 ## Design system
 
@@ -162,9 +191,10 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 
 ## Known limitations
 
-- The dashboard has no data source yet: every key figure, chart and list shows an empty state, and no sample figures are used. Charts (Chart.js) and real figures are added once orders, products and customers are stored.
+- The dashboard is not connected to the stored data yet: every key figure, chart and list shows an empty state, even though products, customers and orders exist. Charts (Chart.js) and real figures are added in a later phase.
 - Sections that are not built yet appear in the navigation as unavailable.
-- Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. Administrator accounts are created by seeders.
+- Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. The only administrator account is the local demo account created by the seeder; a production installation needs another way to create its first administrator, which is planned for the deployment phase.
 - The search field in the top bar is not connected yet; products are searched and filtered on the Products page.
 - Categories are fixed by the seeder; there is no page to add or rename them.
+- Customers and orders are read-only apart from the order status: there are no pages to add, edit or delete them, and orders come only from the seeder.
 - Screenshots will be added once the interface is built.

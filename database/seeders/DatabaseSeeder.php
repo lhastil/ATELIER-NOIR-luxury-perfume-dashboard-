@@ -14,10 +14,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // The demo and sample seeders skip themselves in production; only the
+        // categories, which the product form needs, are created there.
         $this->call([
-            DemoAdminSeeder::class,
             CategorySeeder::class,
+            DemoAdminSeeder::class,
             SampleProductSeeder::class,
+            SampleOrderSeeder::class,
         ]);
     }
 }

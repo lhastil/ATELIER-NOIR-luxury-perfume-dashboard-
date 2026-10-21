@@ -165,3 +165,36 @@
     font-size: var(--text-sm);
     color: var(--color-danger);
 }
+
+/* Filter bar above a list: a search field, optional selects and Apply / Reset. */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+}
+
+.filters > .field {
+    flex: 1 1 10rem;
+}
+
+.filters > .filters__search {
+    flex: 2 1 14rem;
+}
+
+.filters__actions {
+    display: flex;
+    gap: var(--space-2);
+}
+
+@media (width < 48em) {
+    .filters > .field,
+    .filters__actions {
+        flex-basis: 100%;
+    }
+
+    .filters__actions .button {
+        flex: 1;
+    }
+}

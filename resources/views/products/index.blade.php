@@ -43,7 +43,7 @@
         </div>
     </form>
 
-    <x-card title="Catalog" :description="$products->total().' '.Str::plural('product', $products->total()).($filtering ? ' match the filters' : '')">
+    <x-card title="Catalog" :description="$products->total().' '.Str::plural('product', $products->total()).($filtering ? ($products->total() === 1 ? ' matches' : ' match').' the filters' : '')">
         <x-table caption="Products" :columns="[
             'Product',
             'Brand',
@@ -63,7 +63,7 @@
                                 <span class="product-thumb product-thumb--empty" aria-hidden="true"><x-icon name="image" :size="18" /></span>
                             @endif
                             <div class="product-cell__text">
-                                <a class="product-cell__name" href="{{ route('products.edit', $product) }}">{{ $product->name }}</a>
+                                <a class="product-cell__name table-link" href="{{ route('products.edit', $product) }}">{{ $product->name }}</a>
                                 <span class="product-cell__meta">{{ $product->sku }} · {{ $product->concentration }} · {{ $product->volume_ml }} ml</span>
                             </div>
                         </div>
