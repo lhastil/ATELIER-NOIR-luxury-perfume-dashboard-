@@ -17,6 +17,26 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | Dashboard figures, revenue and order charts (Chart.js), recent orders and best sellers from the stored data | Done |
 | Messages, profile, password change and store settings | Planned |
 
+## Screenshots
+
+Screenshots of the running application with the fictional sample data described below.
+
+**Dashboard:** key figures, revenue and order charts, recent orders and best sellers.
+
+![Dashboard with key figures, a revenue chart, an order status chart, recent orders and best sellers](docs/screenshots/dashboard-desktop.png)
+
+**Products:** the catalog with search, filters, stock and status.
+
+![Product list with search and filters, prices, stock levels and active or hidden status](docs/screenshots/products.png)
+
+**Order details:** the ordered items at the prices paid, the order total, the status form and the customer.
+
+![Order details with items, line totals, the order total, a status form and customer contact details](docs/screenshots/order-details.png)
+
+**Dashboard on a phone:**
+
+<img src="docs/screenshots/dashboard-mobile.png" alt="Dashboard on a phone, with the key figures in two columns above the revenue chart" width="320">
+
 ## Technology stack
 
 - **Backend:** PHP 8.3+, Laravel 13
@@ -90,7 +110,7 @@ php artisan db:seed
 
 Seeding creates the product categories, the demo administrator described below and the sample catalog, customers and orders. It can be run again safely: nothing is duplicated, products you have edited are not overwritten, and order statuses you have changed are kept. Running it again does reset the demo administrator's name and password to the values below.
 
-In production (`APP_ENV=production`), `php artisan db:seed --force` creates only the five categories: the demo administrator and all sample data seeders skip themselves there.
+In production (`APP_ENV=production`), the demo administrator and all sample data seeders skip themselves, so a full `php artisan db:seed --force` creates only the five categories there. See [Running in production](#running-in-production) for the production steps.
 
 ### Sample data
 
@@ -126,6 +146,62 @@ php artisan serve
 ```
 
 Then open <http://localhost:8000> and sign in with the demo administrator. Every admin page requires signing in; there is no public registration.
+
+## Running in production
+
+These are the steps this project needs on a production server, not a complete hosting guide. All values below are placeholders: replace them with your own.
+
+**1. Environment.** Copy `.env.example` to `.env` and set at least:
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://admin.your-domain.example
+
+DB_CONNECTION=mysql
+DB_HOST=your-database-host
+DB_DATABASE=your-database-name
+DB_USERNAME=your-database-user
+DB_PASSWORD=your-database-password
+```
+
+`APP_DEBUG=false` keeps error pages from showing stack traces and configuration details. `APP_URL` must be the address the panel is served from, because product image links are built from it.
+
+**2. Dependencies, assets and application key.**
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci
+npm run build
+php artisan key:generate --force   # first deployment only: a new key signs everyone out
+```
+
+**3. Database, storage and caches.**
+
+```bash
+php artisan migrate --force
+php artisan db:seed --class=CategorySeeder --force   # the five categories the product form needs
+php artisan storage:link                             # makes uploaded product images reachable
+php artisan optimize                                 # caches configuration, routes and views
+```
+
+Run `php artisan optimize` again after every deployment and after changing `.env`, because the cached configuration is used instead of `.env`.
+
+The sample catalog, customers and orders are fictional and do not belong on a real installation. Their seeders refuse to run when `APP_ENV=production`, but seeding only `CategorySeeder` makes that explicit.
+
+**4. First administrator.** The demo administrator is never created in production. Create your own account with Tinker:
+
+```bash
+php artisan tinker
+```
+
+```php
+$password = Str::password(20);
+App\Models\User::create(['name' => 'Store Administrator', 'email' => 'admin@your-domain.example', 'password' => $password]);
+echo $password;
+```
+
+The `User` model hashes the password when it is saved. The password is generated inside Tinker and printed once, so it is never typed into your shell or Tinker history. Store it in a password manager straight away. There is no page to change it yet; to replace it, run the same steps with `App\Models\User::where('email', 'admin@your-domain.example')->first()->update(['password' => $password]);` instead of `create`.
 
 ## Testing and quality checks
 
@@ -212,8 +288,8 @@ Released under the [MIT License](LICENSE). Third-party fonts, icons and the Char
 - The dashboard has no date filter or comparison with earlier periods. The sample orders are dated relative to the day they were first seeded, so as time passes their revenue moves out of the six-month chart.
 - The dashboard loads every delivered order with its items to add up revenue, which is fine for a store of this size but would need a database-level sum for a very large order history.
 - Sections that are not built yet appear in the navigation as unavailable.
-- Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. The only administrator account is the local demo account created by the seeder; a production installation needs another way to create its first administrator, which is planned for the deployment phase.
+- Authentication covers login and logout only: there is no registration, password reset, password change, "remember me" or role system. Locally, the seeder creates the demo administrator; in production, the first administrator is created with Tinker (see [Running in production](#running-in-production)).
 - The search field in the top bar is not connected: it is shown disabled. Products, customers and orders each have their own search on their list page.
+- List searches use SQL `LIKE`, so `%` and `_` in a search act as wildcards. Accent matching also differs between databases: MySQL treats "cedre" and "Cèdre" as a match, SQLite does not.
 - Categories are fixed by the seeder; there is no page to add or rename them.
 - Customers and orders are read-only apart from the order status: there are no pages to add, edit or delete them, and orders come only from the seeder.
-- The README has no screenshots.
