@@ -11,14 +11,11 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guests_are_welcomed_with_todays_date(): void
+    public function test_the_header_shows_todays_date(): void
     {
         $this->travelTo('2026-03-14 09:00:00');
 
-        $this->dashboard()
-            ->assertSee('<p class="eyebrow">Saturday 14 March 2026</p>', false)
-            ->assertSee('<h1 class="page-header__title font-display">Welcome</h1>', false)
-            ->assertDontSee('Welcome back');
+        $this->dashboard()->assertSee('<p class="eyebrow">Saturday 14 March 2026</p>', false);
     }
 
     public function test_signed_in_users_are_welcomed_back_by_name(): void
@@ -46,7 +43,7 @@ class DashboardTest extends TestCase
         $outline = array_map(fn (array $match) => $match[1].':'.trim(strip_tags($match[2])), $matches);
 
         $this->assertSame([
-            'h1:Welcome',
+            'h1:Welcome back, Hélène Moreau',
             'h2:Key figures',
             'h2:Revenue',
             'h2:Order Analytics',
@@ -128,7 +125,7 @@ class DashboardTest extends TestCase
 
     private function dashboard(): TestResponse
     {
-        return $this->get(route('dashboard'))->assertOk();
+        return $this->actingAs(User::factory()->create(['name' => 'Hélène Moreau']))->get(route('dashboard'))->assertOk();
     }
 
     private function mainContent(): string

@@ -1,0 +1,67 @@
+/* Form fields and buttons. */
+.field {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.field__label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+}
+
+.field__input {
+    width: 100%;
+    min-height: var(--control-size-lg);
+    padding: 0 var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-md);
+    transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.field__input:hover {
+    border-color: var(--color-text-muted);
+}
+
+.field__input:focus-visible {
+    border-color: var(--color-accent-strong);
+    outline-offset: 1px;
+}
+
+.field__input[aria-invalid='true'] {
+    border-color: var(--color-danger);
+}
+
+.field__error {
+    font-size: var(--text-sm);
+    color: var(--color-danger);
+}
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: var(--control-size-lg);
+    padding: 0 var(--space-6);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    transition:
+        background-color var(--duration-fast) var(--ease-standard),
+        border-color var(--duration-fast) var(--ease-standard);
+}
+
+/* Charcoal primary action; the gold stays an accent, not a fill. */
+.button--primary {
+    background: var(--color-text);
+    color: var(--color-surface);
+}
+
+.button--primary:hover {
+    background: color-mix(in srgb, var(--color-text) 88%, var(--color-accent));
+}

@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer) and the dashboard structure are in place. The dashboard shows empty states until real store data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure and administrator login are in place. The dashboard shows empty states until real store data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
@@ -11,7 +11,7 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | Laravel 13 foundation, MySQL setup, test tooling | Done |
 | Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
 | Dashboard structure and reusable content components (empty states until store data exists) | Done |
-| Admin authentication (login, logout, remember me, protected routes) | Planned |
+| Admin authentication (login, logout, login throttling, protected routes) | Done |
 | Categories and products (CRUD, image upload, search, filters, pagination) | Planned |
 | Customers, orders and order items (status updates, totals) | Planned |
 | Dashboard analytics (revenue and order charts) | Planned |
@@ -87,7 +87,18 @@ php artisan migrate
 php artisan db:seed
 ```
 
-> The current seeder is Laravel's default. It creates a `test@example.com` user with the password `password`. That is acceptable only while the app has no login. It will be replaced by a controlled admin-account seeder and command when authentication is added.
+Seeding creates the demo administrator described below. Running it again updates the same account instead of adding another one.
+
+### Demo administrator (local only)
+
+| | |
+| --- | --- |
+| Email | `admin@atelier-noir.test` |
+| Password | `atelier-demo` |
+
+These credentials are published in this README on purpose, so anyone can try the project locally. They are for local demonstration only: never use them, or this account, on a real or publicly reachable installation. The seeder (`database/seeders/DemoAdminSeeder.php`) refuses to run when `APP_ENV=production`, and the password is stored hashed like any other.
+
+To create only this account: `php artisan db:seed --class=DemoAdminSeeder`
 
 ### Running the application
 
@@ -96,7 +107,7 @@ npm run build          # or `npm run dev` for hot reloading
 php artisan serve
 ```
 
-Then open <http://localhost:8000>.
+Then open <http://localhost:8000> and sign in with the demo administrator. Every admin page requires signing in; there is no public registration.
 
 ## Testing and quality checks
 
@@ -142,5 +153,6 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 
 - The dashboard has no data source yet: every key figure, chart and list shows an empty state, and no sample figures are used. Charts (Chart.js) and real figures are added once orders, products and customers are stored.
 - Sections that are not built yet appear in the navigation as unavailable.
-- There is no login yet, so the admin layout is publicly reachable during local development. Search is shown disabled until the catalogue exists.
+- Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. Administrator accounts are created by seeders.
+- Search is shown disabled until the catalogue exists.
 - Screenshots will be added once the interface is built.

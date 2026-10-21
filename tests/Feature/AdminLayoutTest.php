@@ -95,20 +95,8 @@ class AdminLayoutTest extends TestCase
             ->assertSee('<span aria-current="page">Edit</span>', false);
     }
 
-    public function test_guests_see_a_neutral_identity_and_no_logout(): void
-    {
-        $this->defineRoutes(fn () => Route::post('/logout', fn () => null)->name('logout'));
-        $this->assertTrue(Route::has('logout'));
-
-        $this->dashboard()
-            ->assertSee('Administrator')
-            ->assertSee('Not signed in')
-            ->assertDontSee('action="'.url('/logout').'"', false);
-    }
-
     public function test_signed_in_user_sees_identity_and_logout_forms(): void
     {
-        $this->defineRoutes(fn () => Route::post('/logout', fn () => null)->name('logout'));
         $user = User::factory()->create(['name' => 'Hélène Moreau', 'email' => 'helene@example.com']);
 
         $html = $this->actingAs($user)->get(route('dashboard'))->assertOk()
@@ -149,6 +137,6 @@ class AdminLayoutTest extends TestCase
 
     private function dashboard(): TestResponse
     {
-        return $this->get(route('dashboard'))->assertOk();
+        return $this->actingAs(User::factory()->create())->get(route('dashboard'))->assertOk();
     }
 }
