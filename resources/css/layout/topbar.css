@@ -1,0 +1,135 @@
+/* Top navigation: page context on the left, search and account controls on the right. */
+.topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-topbar);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--topbar-height);
+    padding: var(--space-3) var(--content-padding);
+    background: var(--color-bg);
+    border-bottom: var(--border-hairline);
+}
+
+.topbar__menu,
+.topbar__brand {
+    display: none;
+}
+
+/* Both sides can shrink, so large text never makes them overlap. */
+.topbar__context {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.topbar__actions {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.topbar-search {
+    position: relative;
+    flex: 0 1 18rem;
+    min-width: 8rem;
+    margin-right: var(--space-2);
+}
+
+.topbar-search .icon {
+    position: absolute;
+    left: var(--space-3);
+    top: 50%;
+    color: var(--color-text-muted);
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.topbar-search__input {
+    width: 100%;
+    height: var(--control-size);
+    padding: 0 var(--space-3) 0 var(--control-size); /* leaves room for the icon */
+    background: var(--color-surface);
+    border: var(--border-hairline);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    transition: border-color var(--duration-fast) var(--ease-standard);
+}
+
+.topbar-search__input::placeholder {
+    color: var(--color-text-secondary);
+}
+
+/* Not connected yet: a dashed edge marks the field as unavailable. */
+.topbar-search__input:disabled {
+    background: transparent;
+    border-style: dashed;
+    border-color: var(--color-border-strong);
+    cursor: not-allowed;
+}
+
+.topbar-search__input:disabled::placeholder {
+    color: var(--color-text-muted);
+}
+
+.topbar__divider {
+    width: 1px;
+    height: var(--space-6);
+    margin-inline: var(--space-2);
+    background: var(--color-border);
+}
+
+@media (width < 64em) {
+    .js .topbar__menu {
+        display: inline-flex;
+        margin-left: calc(-1 * var(--space-2));
+    }
+}
+
+@media (width < 48em) {
+    /* Compact top bar: brand mark instead of the breadcrumb trail (the page title follows below). */
+    .topbar {
+        gap: var(--space-2);
+        padding-block: 0;
+    }
+
+    /* Without the drawer the full sidebar sits above, so the brand is not repeated. */
+    .js .topbar__brand {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: var(--font-display);
+        font-size: var(--text-md);
+        font-weight: var(--weight-semibold);
+        letter-spacing: var(--tracking-display);
+        text-transform: uppercase;
+        white-space: nowrap;
+        border-radius: var(--radius-sm);
+    }
+
+    .topbar__context .breadcrumbs,
+    .topbar-search,
+    .topbar__divider,
+    .account-trigger > .icon {
+        display: none;
+    }
+
+    .account-trigger {
+        padding: 0 var(--space-1);
+    }
+
+    /* Dropdowns open from the edge of the bar so they never leave the screen. */
+    .topbar .dropdown {
+        position: static;
+    }
+
+    .topbar .dropdown__panel {
+        right: var(--content-padding);
+        left: auto;
+        max-width: calc(100vw - 2 * var(--content-padding));
+    }
+}

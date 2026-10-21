@@ -7,6 +7,14 @@ use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Views must render without a compiled front-end build (fresh clones, CI).
+        $this->withoutVite();
+    }
+
     /**
      * Refuse to run against anything but a dedicated test database.
      *

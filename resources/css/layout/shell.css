@@ -1,0 +1,71 @@
+/*
+ * Application shell: persistent sidebar from 1024px, off-canvas drawer below.
+ * The drawer behaviour only applies once <html> has the "js" class (removed
+ * again if the script bundle fails); without it the navigation simply sits
+ * above the page content.
+ */
+html {
+    scrollbar-gutter: stable;
+}
+
+.app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+.app-main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.app-content {
+    flex: 1;
+    width: 100%;
+    max-width: calc(var(--content-max-width) + 2 * var(--content-padding));
+    margin-inline: auto;
+    padding: var(--space-8) var(--content-padding) var(--space-16);
+}
+
+.app-content:focus {
+    outline: none;
+}
+
+.app-backdrop {
+    display: none;
+}
+
+@media (width < 64em) {
+    .app-shell {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .app-content {
+        padding-top: var(--space-6);
+    }
+
+    .js .app-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: var(--z-backdrop);
+        background: var(--color-backdrop);
+        opacity: 0;
+        visibility: hidden;
+        transition:
+            opacity var(--duration-slow) var(--ease-standard),
+            visibility 0s linear var(--duration-slow);
+    }
+
+    .is-sidebar-open .app-backdrop {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity var(--duration-slow) var(--ease-standard);
+    }
+
+    .is-sidebar-open body {
+        overflow: hidden;
+    }
+}

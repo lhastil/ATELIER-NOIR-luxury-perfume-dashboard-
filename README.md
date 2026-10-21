@@ -2,14 +2,15 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: foundation only.** The Laravel application, database setup and test tooling are in place. None of the admin features below are built yet. They are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation and the admin layout (design tokens, sidebar, top navigation, mobile drawer) are in place. The admin features below are not built yet. They are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
 | Area | Status |
 | --- | --- |
 | Laravel 13 foundation, MySQL setup, test tooling | Done |
-| Admin layout, navigation and design system | Planned |
+| Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
+| Dashboard content and reusable page components | Planned |
 | Admin authentication (login, logout, remember me, protected routes) | Planned |
 | Categories and products (CRUD, image upload, search, filters, pagination) | Planned |
 | Customers, orders and order items (status updates, totals) | Planned |
@@ -19,7 +20,8 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 ## Technology stack
 
 - **Backend:** PHP 8.3+, Laravel 13
-- **Frontend:** Blade templates, HTML, CSS and vanilla JavaScript, bundled with Vite. Chart.js will be added for the dashboard. No CSS or JS framework.
+- **Frontend:** Blade templates, HTML, custom CSS and vanilla JavaScript, bundled with Vite. Chart.js will be added for the dashboard. No CSS or JS framework.
+- **Typography and icons:** Cormorant Garamond and Inter (self-hosted via Fontsource), Lucide icons as inline SVG
 - **Database:** MySQL 8.4 (target). Automated tests run on SQLite in memory by default, and can also run against MySQL.
 - **Testing and quality:** PHPUnit 12, Laravel Pint
 
@@ -113,14 +115,26 @@ Run tests through these Composer scripts, which clear any cached configuration f
 
 Standard Laravel layout, plus:
 
+- `resources/css/base/`: design tokens (`tokens.css`), fonts and global styles
+- `resources/css/layout/`: application shell, sidebar and top navigation
+- `resources/css/components/`: styles for shared layout components
+- `resources/js/ui/`: navigation drawer and dropdown behaviour (vanilla JavaScript)
+- `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `icon`, `avatar`, `dropdown`, `page-header`)
 - `compose.yaml`: local MySQL server
 - `docker/mysql/init/`: one-time MySQL initialisation (creates the testing database)
 
+## Design system
+
+All colours, type sizes, spacing (4px scale), radii, shadows and motion timings are CSS custom properties in `resources/css/base/tokens.css`. The palette follows the ATELIER NOIR specification. Two darker shades of the specified secondary text and gold colours (`--color-text-secondary`, `--color-accent-strong`) are used for small text so that it meets WCAG AA contrast. The specified `#858078` and `#A48A60` are kept for large text, icons and decoration.
+
+The layout has three breakpoints: desktop (1024px and up) with a persistent 248px sidebar, tablet (768–1023px) and mobile (below 768px), where the sidebar becomes an accessible slide-in drawer. Transitions are 150–220ms and are switched off when the user prefers reduced motion.
+
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE). Third-party fonts and icons are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Known limitations
 
-- Only the project foundation exists. The welcome page is a temporary placeholder, and there is no admin interface or login yet.
+- Only the layout exists. The dashboard page shows a temporary "In preparation" notice, and sections that are not built yet appear in the navigation as unavailable.
+- There is no login yet, so the admin layout is publicly reachable during local development. Search is shown disabled until the catalogue exists.
 - Screenshots will be added once the interface is built.

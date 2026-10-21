@@ -1,0 +1,7 @@
+/*
+ * Self-hosted typefaces, bundled by Vite (no third-party font requests).
+ * Inter: interface. Cormorant Garamond: editorial display, Latin subset only.
+ */
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource/cormorant-garamond/latin-500.css';
+@import '@fontsource/cormorant-garamond/latin-600.css';
