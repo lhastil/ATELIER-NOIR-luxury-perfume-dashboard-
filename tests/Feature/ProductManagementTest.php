@@ -4,25 +4,18 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\User;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\SampleProductSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Tests\TestCase;
 
 class ProductManagementTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Storage::fake('public');
-    }
 
     public function test_guests_cannot_reach_product_pages(): void
     {
@@ -96,8 +89,20 @@ class ProductManagementTest extends TestCase
         $product = Product::sole();
         $this->assertSame('AN-FLR-009', $product->sku);
         $this->assertSame('84.50', $product->price);
-        $this->assertStringStartsWith('products/', $product->image_path);
-        Storage::disk('public')->assertExists($product->image_path);
+        $this->assertSame('image/jpeg', $product->image->mime_type);
+        $this->assertSame($data['image']->getContent(), $product->image->data);
+    }
+
+    public function test_the_stored_type_comes_from_the_file_content_not_the_browser(): void
+    {
+        // A real JPEG sent with a misleading name and browser-reported type.
+        $jpeg = UploadedFile::fake()->image('source.jpg');
+        $upload = new UploadedFile($jpeg->getPathname(), 'photo.png', 'text/html', null, true);
+
+        $this->signIn()->post(route('products.store'), $this->validData(['image' => $upload]))
+            ->assertRedirect(route('products.index'));
+
+        $this->assertSame('image/jpeg', Product::sole()->image->mime_type);
     }
 
     public function test_invalid_input_is_rejected_with_messages(): void
@@ -118,7 +123,7 @@ class ProductManagementTest extends TestCase
             ->assertSessionHasErrors(['name', 'sku', 'price', 'stock', 'concentration', 'image']);
 
         $this->assertSame(1, Product::count());
-        $this->assertSame([], Storage::disk('public')->allFiles());
+        $this->assertSame(0, ProductImage::count());
     }
 
     public function test_an_admin_can_update_a_product_and_keep_its_sku(): void
@@ -146,60 +151,85 @@ class ProductManagementTest extends TestCase
         $this->assertSame('AN-FLR-002', $product->refresh()->sku);
     }
 
-    public function test_a_new_image_replaces_and_deletes_the_old_one(): void
+    public function test_a_new_image_replaces_the_old_one(): void
     {
-        $old = UploadedFile::fake()->image('old.jpg')->store('products', 'public');
-        $unrelated = UploadedFile::fake()->image('other.jpg')->store('products', 'public');
-        $product = Product::factory()->create(['image_path' => $old]);
+        $product = $this->productWithImage('old.jpg');
+        $other = $this->productWithImage('other.jpg', ['sku' => 'AN-OTHER-1']);
+        $otherBytes = $other->image->data;
+        $new = UploadedFile::fake()->image('new.png');
 
-        $this->signIn()->put(route('products.update', $product), $this->validData(['image' => UploadedFile::fake()->image('new.png')]));
+        $this->signIn()->put(route('products.update', $product), $this->validData(['image' => $new]));
 
-        $product->refresh();
-        Storage::disk('public')->assertMissing($old);
-        Storage::disk('public')->assertExists($product->image_path);
-        Storage::disk('public')->assertExists($unrelated);
+        $image = $product->refresh()->image;
+        $this->assertSame('image/png', $image->mime_type);
+        $this->assertSame($new->getContent(), $image->data);
+        $this->assertSame(2, ProductImage::count());
+        $this->assertSame($otherBytes, $other->refresh()->image->data);
     }
 
-    public function test_a_failed_create_removes_the_uploaded_image(): void
+    public function test_replacing_an_image_twice_in_one_second_gives_new_addresses(): void
     {
-        Product::creating(fn () => throw new RuntimeException('Database unavailable'));
+        $this->freezeTime();
+        $product = $this->productWithImage('first.jpg');
+        $urls = [$product->image_url];
+        $second = UploadedFile::fake()->image('second.png');
+        $third = UploadedFile::fake()->image('third.webp');
+
+        $this->signIn();
+
+        foreach ([$second, $third] as $upload) {
+            $this->put(route('products.update', $product), $this->validData(['image' => $upload]))
+                ->assertRedirect(route('products.index'));
+            $urls[] = $product->refresh()->image_url;
+        }
+
+        $this->assertCount(3, array_unique($urls));
+        $this->assertSame(1, ProductImage::count());
+
+        $response = $this->get($urls[2])->assertOk()->assertHeader('Content-Type', 'image/webp');
+        $this->assertSame($third->getContent(), $response->getContent());
+    }
+
+    public function test_a_failed_create_saves_neither_the_product_nor_the_image(): void
+    {
+        Product::created(fn () => throw new RuntimeException('Database unavailable'));
 
         $this->signIn()->post(route('products.store'), $this->validData(['image' => UploadedFile::fake()->image('bottle.jpg')]))
             ->assertServerError();
 
         $this->assertSame(0, Product::count());
-        $this->assertSame([], Storage::disk('public')->allFiles());
+        $this->assertSame(0, ProductImage::count());
     }
 
     public function test_a_failed_update_keeps_the_current_image(): void
     {
-        $current = UploadedFile::fake()->image('current.jpg')->store('products', 'public');
-        $product = Product::factory()->create(['image_path' => $current]);
-        Product::updating(fn () => throw new RuntimeException('Database unavailable'));
+        $product = $this->productWithImage('current.jpg');
+        $current = $product->image->data;
+        ProductImage::saving(fn () => throw new RuntimeException('Database unavailable'));
 
-        $this->signIn()->put(route('products.update', $product), $this->validData(['image' => UploadedFile::fake()->image('new.png')]))
+        $this->signIn()->put(route('products.update', $product), $this->validData(['name' => 'Renamed', 'image' => UploadedFile::fake()->image('new.png')]))
             ->assertServerError();
 
-        $this->assertSame($current, $product->refresh()->image_path);
-        $this->assertSame([$current], Storage::disk('public')->allFiles());
+        $product->refresh();
+        $this->assertNotSame('Renamed', $product->name);
+        $this->assertSame('image/jpeg', $product->image->mime_type);
+        $this->assertSame($current, $product->image->data);
     }
 
     public function test_the_current_image_can_be_removed(): void
     {
-        $image = UploadedFile::fake()->image('bottle.jpg')->store('products', 'public');
-        $product = Product::factory()->create(['image_path' => $image]);
+        $product = $this->productWithImage();
 
         $this->signIn()->put(route('products.update', $product), $this->validData(['remove_image' => '1']));
 
-        $this->assertNull($product->refresh()->image_path);
-        Storage::disk('public')->assertMissing($image);
+        $this->assertNull($product->refresh()->image);
+        $this->assertSame(0, ProductImage::count());
     }
 
     public function test_deleting_a_product_removes_it_and_its_image(): void
     {
-        $image = UploadedFile::fake()->image('bottle.jpg')->store('products', 'public');
-        $product = Product::factory()->create(['image_path' => $image]);
-        $other = Product::factory()->create();
+        $product = $this->productWithImage();
+        $other = $this->productWithImage('other.jpg', ['sku' => 'AN-OTHER-1']);
 
         $this->signIn()->delete(route('products.destroy', $product))
             ->assertRedirect(route('products.index'))
@@ -207,7 +237,36 @@ class ProductManagementTest extends TestCase
 
         $this->assertModelMissing($product);
         $this->assertModelExists($other);
-        Storage::disk('public')->assertMissing($image);
+        $this->assertSame([$other->id], ProductImage::pluck('product_id')->all());
+    }
+
+    public function test_images_are_served_from_the_database_to_signed_in_users(): void
+    {
+        $product = $this->productWithImage('bottle.png');
+        $withoutImage = Product::factory()->create(['sku' => 'AN-NOIMG-1']);
+
+        $this->get(route('products.image', $product))->assertRedirect(route('login'));
+
+        $response = $this->signIn()->get(route('products.image', $product))->assertOk();
+        $this->assertSame($product->image->data, $response->getContent());
+        $response->assertHeader('Content-Type', 'image/png')
+            ->assertHeader('Content-Length', (string) strlen($product->image->data))
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+        $this->assertStringContainsString('max-age=31536000', $response->headers->get('Cache-Control'));
+
+        $this->get(route('products.image', $withoutImage))->assertNotFound();
+    }
+
+    public function test_the_list_links_stored_images_and_shows_a_placeholder_otherwise(): void
+    {
+        $product = $this->productWithImage('bottle.jpg', ['name' => 'Rose Nocturne']);
+        Product::factory()->create(['name' => 'Ambre Royal', 'sku' => 'AN-NOIMG-1']);
+
+        $url = route('products.image', ['product' => $product, 'v' => $product->image->id]);
+
+        $this->signIn()->get(route('products.index'))
+            ->assertSee('<img class="product-thumb" src="'.e($url).'"', false)
+            ->assertSee('product-thumb--empty', false);
     }
 
     public function test_delete_buttons_ask_for_confirmation(): void
@@ -229,6 +288,17 @@ class ProductManagementTest extends TestCase
         $this->assertSame(15, Product::distinct()->count('sku'));
         $this->assertSame(5, Product::distinct()->count('category_id'));
         $this->assertSame('150.00', Product::where('sku', 'AN-FLR-001')->value('price'));
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function productWithImage(string $file = 'bottle.jpg', array $attributes = []): Product
+    {
+        $product = Product::factory()->create($attributes);
+        $product->image()->create(ProductImage::attributesFor(UploadedFile::fake()->image($file)));
+
+        return $product->load('image');
     }
 
     private function signIn(): static

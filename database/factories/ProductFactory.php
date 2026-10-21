@@ -29,7 +29,6 @@ class ProductFactory extends Factory
             'stock' => fake()->numberBetween(0, 80),
             'is_active' => true,
             'description' => fake()->sentence(),
-            'image_path' => null,
         ];
     }
 

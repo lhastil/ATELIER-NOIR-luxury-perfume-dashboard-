@@ -47,7 +47,7 @@ Screenshots of the running application with the fictional sample data described 
 
 ## Prerequisites
 
-- PHP 8.3 or newer with the `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl` and `fileinfo` extensions, plus `gd` for the test suite (it creates fake product images)
+- PHP 8.3 or newer with the `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`, `fileinfo` and `intl` extensions (`intl` formats prices and figures), plus `gd` for the test suite (it creates fake product images)
 - Composer 2
 - Node.js 22.13+ and npm
 - MySQL 8.4, either installed locally or through Docker (a `compose.yaml` is included)
@@ -63,7 +63,6 @@ npm install
 
 cp .env.example .env
 php artisan key:generate
-php artisan storage:link   # makes uploaded product images publicly reachable
 ```
 
 ### Environment configuration
@@ -165,7 +164,7 @@ DB_USERNAME=your-database-user
 DB_PASSWORD=your-database-password
 ```
 
-`APP_DEBUG=false` keeps error pages from showing stack traces and configuration details. `APP_URL` must be the address the panel is served from, because product image links are built from it.
+`APP_DEBUG=false` keeps error pages from showing stack traces and configuration details. `APP_URL` is the address the panel is served from.
 
 **2. Dependencies, assets and application key.**
 
@@ -176,12 +175,11 @@ npm run build
 php artisan key:generate --force   # first deployment only: a new key signs everyone out
 ```
 
-**3. Database, storage and caches.**
+**3. Database and caches.**
 
 ```bash
 php artisan migrate --force
 php artisan db:seed --class=CategorySeeder --force   # the five categories the product form needs
-php artisan storage:link                             # makes uploaded product images reachable
 php artisan optimize                                 # caches configuration, routes and views
 ```
 
@@ -202,6 +200,33 @@ echo $password;
 ```
 
 The `User` model hashes the password when it is saved. The password is generated inside Tinker and printed once, so it is never typed into your shell or Tinker history. Store it in a password manager straight away. There is no page to change it yet; to replace it, run the same steps with `App\Models\User::where('email', 'admin@your-domain.example')->first()->update(['password' => $password]);` instead of `create`.
+
+### Deploying to Vercel (trial, not yet deployed)
+
+The repository contains a configuration for a trial deployment on Vercel's free Hobby plan, which Vercel limits to personal, non-commercial use. It has **not been deployed or tested on Vercel yet**.
+
+- `vercel.json` runs `api/index.php` with the community-maintained [`vercel-php`](https://github.com/vercel-community/php) runtime (`vercel-php@0.7.4`, PHP 8.3). Vercel itself has no official PHP runtime. The build runs `npm run build` and serves `public/` (including the Vite assets in `public/build`) as static files; every other request goes to Laravel.
+- `api/index.php` loads Laravel's usual `public/index.php`.
+- The `vercel` script in `composer.json` (`npm ci --ignore-scripts`, then `npm run build`) is run by the PHP runtime while it builds the function, so `public/build/manifest.json` is inside the function for Laravel's `@vite`. The runtime does not serve those files to browsers, which is why `vercel.json`'s `npm run build` also publishes them as static files; both builds come from the same lockfile and produce identical files.
+- `.vercelignore` leaves `docs/` and `tests/` out of the deployment.
+
+Vercel's filesystem is read-only apart from a temporary `/tmp` folder, so there is no permanent disk: product images are stored in the database (see [Business rules](#business-rules)), and Laravel's compiled views, cache files and logs are redirected. Set these in the Vercel project's environment variables, never in a committed file:
+
+| Variable | Value |
+| --- | --- |
+| `APP_ENV`, `APP_DEBUG` | `production`, `false` |
+| `APP_KEY` | generate one locally with `php artisan key:generate --show` and keep a private copy |
+| `APP_URL` | the deployment's `https://` address |
+| `DB_*` | the connection details of a hosted MySQL-compatible database (for example TiDB Cloud Starter, which requires TLS) |
+| `MYSQL_ATTR_SSL_CA` | the path of a certificate bundle inside the Vercel runtime, needed for TLS; to be confirmed on a first deployment |
+| `TRUSTED_PROXIES` | `*`, so links use `https` behind Vercel's proxy (read by `bootstrap/app.php`; it must be a real environment variable of the host) |
+| `SESSION_DRIVER`, `CACHE_STORE` | `database`, so sessions and the login throttle persist between requests |
+| `SESSION_SECURE_COOKIE` | `true` |
+| `LOG_CHANNEL` | `stderr` |
+| `VIEW_COMPILED_PATH` | `/tmp/views` |
+| `APP_SERVICES_CACHE`, `APP_PACKAGES_CACHE`, `APP_CONFIG_CACHE`, `APP_ROUTES_CACHE`, `APP_EVENTS_CACHE` | `/tmp/services.php`, `/tmp/packages.php`, `/tmp/config.php`, `/tmp/routes.php`, `/tmp/events.php` |
+
+There is no shell on Vercel, so the database is prepared once from your own computer with the hosted database's details in a local, uncommitted environment: `php artisan migrate --force`, `php artisan db:seed --class=CategorySeeder --force`, and the first administrator as in step 4 above. Migrations are deliberately not part of the Vercel build.
 
 ## Testing and quality checks
 
@@ -227,6 +252,7 @@ Standard Laravel layout, plus:
 - `resources/js/ui/`: navigation drawer, dropdown, scrollable-table, image preview, delete-confirmation and dashboard chart behaviour (vanilla JavaScript)
 - `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `form/*`, `icon`, `avatar`, `badge`, `flash`, `dropdown`, `page-header`, `card`, `stat-card`, `chart-panel`, `empty-state`, `table`)
 - `resources/views/products/`, `customers/`, `orders/`: the admin pages
+- `api/index.php`, `vercel.json`, `.vercelignore`: the Vercel trial configuration
 - `compose.yaml`: local MySQL server
 - `docker/mysql/init/`: one-time MySQL initialisation (creates the testing database)
 
@@ -238,6 +264,8 @@ The Eloquent relationships defined in `app/Models`:
 | --- | --- | --- |
 | `Category` | `products()`: has many `Product` | The products in a perfume family. |
 | `Product` | `category()`: belongs to `Category` | The family a product is listed under. A category cannot be deleted while products use it. |
+| `Product` | `image()`: has one `ProductImage` | The product's uploaded image, if any; it is deleted together with the product. |
+| `ProductImage` | `product()`: belongs to `Product` | The product the image belongs to. |
 | `Customer` | `orders()`: has many `Order` | A customer's order history. A customer cannot be deleted while they have orders. |
 | `Order` | `customer()`: belongs to `Customer` | Who placed the order. |
 | `Order` | `items()`: has many `OrderItem` | The product lines of the order; they are deleted together with the order. |
@@ -249,8 +277,9 @@ Each order item keeps its own copy of the product name, SKU and unit price from 
 ## Business rules
 
 - **Prices** are shown in euros. The currency is set once, with `APP_CURRENCY` in `.env` (read in `config/app.php`).
-- **Product images** are stored on Laravel's `public` disk in `storage/app/public/products`. Replacing or removing an image, or deleting its product, deletes only that product's file.
-  Image links are built from `APP_URL`, so set it to the address you open the panel at (for example `http://localhost:8000` with `php artisan serve`), and run `php artisan storage:link` once.
+- **Product images** are stored in the database, in the `product_images` table (one image per product), so they need no permanent disk and survive redeployments. The image type is detected from the file's content when it is uploaded, never taken from its name or the type the browser reports; only JPEG, PNG and WebP up to 2 MB are accepted. Images are served to signed-in administrators by `/products/{product}/image`, with an address that changes when the image is replaced, so browsers can cache each version. Saving a product and its image happens in one database transaction, so a failure leaves neither half-saved; deleting a product deletes its image through the foreign key. A replaced image is stored as a new record, so its address always changes.
+- **Moving to database images:** the migration `2026_10_21_000006_create_product_images_table` copies images uploaded before it (from `storage/app/public`) into the database, then removes the old `image_path` column. Only paths in the format the application generated (`products/<file name>`) are read; other paths (for example ones containing `..`), symbolic links, and files that are missing, unreadable or not JPEG, PNG or WebP are skipped, and the original files are left on disk. The migration is not atomic: on MySQL and TiDB each schema change commits immediately, so a run that stops part-way can leave a partly created table or partly copied images. Run it again: as long as the `image_path` column still exists, it rebuilds `product_images` from scratch and copies the files again; once the column is removed, it does nothing.
+- **Rolling back that migration** (`php artisan migrate:rollback`) deletes the `product_images` table and restores an empty `image_path` column. The stored images are not written back to files, so they are lost unless the original files still exist on disk and their paths are set again.
 - **Order statuses** are `pending`, `processing`, `shipped`, `delivered` and `cancelled` (`Order::STATUSES`). An administrator can set any of them on the order page; other values are rejected. Changing a status does not change product stock.
 - **Order totals** are always calculated from the stored order items (quantity × unit price, added up in whole cents); no separate total is stored.
 - **Revenue** counts only orders with the status `delivered` (`Order::delivered()`); pending, processing, shipped and cancelled orders are excluded. It is added up in whole cents from the order items' stored quantities and unit prices, and formatted in euros only for display.
@@ -292,4 +321,5 @@ Released under the [MIT License](LICENSE). Third-party fonts, icons and the Char
 - The search field in the top bar is not connected: it is shown disabled. Products, customers and orders each have their own search on their list page.
 - List searches use SQL `LIKE`, so `%` and `_` in a search act as wildcards. Accent matching also differs between databases: MySQL treats "cedre" and "Cèdre" as a match, SQLite does not.
 - Categories are fixed by the seeder; there is no page to add or rename them.
+- Storing images in the database suits a small catalog like this one. A large catalog would be better served by a file or object storage service.
 - Customers and orders are read-only apart from the order status: there are no pages to add, edit or delete them, and orders come only from the seeder.

@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Number;
 
 #[Fillable([
     'category_id', 'name', 'sku', 'brand', 'concentration', 'volume_ml',
-    'price', 'stock', 'is_active', 'description', 'image_path',
+    'price', 'stock', 'is_active', 'description',
 ])]
 class Product extends Model
 {
@@ -24,11 +24,6 @@ class Product extends Model
      * Fragrance concentrations offered in the product form.
      */
     public const CONCENTRATIONS = ['Parfum', 'Eau de Parfum', 'Eau de Toilette', 'Eau de Cologne'];
-
-    /**
-     * Folder on the public disk that holds uploaded product images.
-     */
-    public const IMAGE_DIRECTORY = 'products';
 
     /**
      * @return array<string, string>
@@ -59,8 +54,26 @@ class Product extends Model
         return Attribute::get(fn () => Number::currency((float) $this->price, in: config('app.currency'), locale: config('app.locale')));
     }
 
+    /**
+     * The uploaded image, stored in the database. Lists load it without its
+     * bytes (see ProductController), so only the image route reads the data.
+     *
+     * @return HasOne<ProductImage, $this>
+     */
+    public function image(): HasOne
+    {
+        return $this->hasOne(ProductImage::class);
+    }
+
+    /**
+     * Address of the image, or null without one. It includes the image's id,
+     * which changes whenever the image is replaced, so browsers can cache each
+     * version for a long time.
+     */
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(fn () => $this->image_path ? Storage::disk('public')->url($this->image_path) : null);
+        return Attribute::get(fn () => $this->image
+            ? route('products.image', ['product' => $this, 'v' => $this->image->id])
+            : null);
     }
 }

@@ -52,6 +52,10 @@
             "@putenv DB_DATABASE=atelier_noir_testing",
             "@php artisan test"
         ],
+        "vercel": [
+            "npm ci --ignore-scripts",
+            "npm run build"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

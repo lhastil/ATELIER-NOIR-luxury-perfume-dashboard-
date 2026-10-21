@@ -16,6 +16,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/', DashboardController::class)->name('dashboard');
     Route::resource('products', ProductController::class)->except('show');
+    Route::get('/products/{product}/image', [ProductController::class, 'image'])->name('products.image');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status.update');
     Route::resource('customers', CustomerController::class)->only(['index', 'show']);

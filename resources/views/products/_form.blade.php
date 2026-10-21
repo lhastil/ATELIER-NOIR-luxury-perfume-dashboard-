@@ -93,7 +93,7 @@
                         @enderror
                     </div>
 
-                    @if ($product->image_path)
+                    @if ($product->image)
                         <label class="choice">
                             <input type="checkbox" name="remove_image" value="1" @checked(old('remove_image'))>
                             <span>Remove the current image</span>
