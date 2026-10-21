@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure and administrator login are in place. The dashboard shows empty states until real store data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer), the dashboard structure, administrator login and product management are in place. The dashboard shows empty states until order data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
@@ -12,7 +12,7 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
 | Dashboard structure and reusable content components (empty states until store data exists) | Done |
 | Admin authentication (login, logout, login throttling, protected routes) | Done |
-| Categories and products (CRUD, image upload, search, filters, pagination) | Planned |
+| Products (create, edit, delete, image upload, search, filters, pagination) and seeded categories | Done |
 | Customers, orders and order items (status updates, totals) | Planned |
 | Dashboard analytics (revenue and order charts) | Planned |
 | Messages, profile, password change and store settings | Planned |
@@ -35,14 +35,15 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 ## Local setup
 
 ```bash
-git clone https://github.com/lhastil/ATELIER-NOIR-luxury-perfume-admin-panel.git
-cd ATELIER-NOIR-luxury-perfume-admin-panel
+git clone https://github.com/lhastil/ATELIER-NOIR-luxury-perfume-dashboard-.git
+cd ATELIER-NOIR-luxury-perfume-dashboard-
 
 composer install
 npm install
 
 cp .env.example .env
 php artisan key:generate
+php artisan storage:link   # makes uploaded product images publicly reachable
 ```
 
 ### Environment configuration
@@ -87,7 +88,14 @@ php artisan migrate
 php artisan db:seed
 ```
 
-Seeding creates the demo administrator described below. Running it again updates the same account instead of adding another one.
+Seeding creates the demo administrator described below, the product categories and the sample catalog. It can be run again safely: nothing is duplicated, and products you have edited are not overwritten. Running it again does reset the demo administrator's name and password to the values below.
+
+### Sample data
+
+The seeded catalog is **sample data for demonstration**: 15 fictional perfumes from fictional brands, spread over five categories (Floral, Woody, Amber, Fresh and Gourmand). It contains no real products, prices or stock levels, and the sample products have no images. Products created in the panel are stored the same way and behave exactly like the seeded ones.
+
+- `database/seeders/CategorySeeder.php`: the five categories. Categories have no management page yet, so this seeder is also needed on a fresh installation.
+- `database/seeders/SampleProductSeeder.php`: the sample products (`php artisan db:seed --class=SampleProductSeeder`, which also seeds the categories). Sample products are matched by SKU, so if you change a sample product's SKU in the panel, the next seed run adds the original sample again.
 
 ### Demo administrator (local only)
 
@@ -98,7 +106,7 @@ Seeding creates the demo administrator described below. Running it again updates
 
 These credentials are published in this README on purpose, so anyone can try the project locally. They are for local demonstration only: never use them, or this account, on a real or publicly reachable installation. The seeder (`database/seeders/DemoAdminSeeder.php`) refuses to run when `APP_ENV=production`, and the password is stored hashed like any other.
 
-To create only this account: `php artisan db:seed --class=DemoAdminSeeder`
+To create only this account: `php artisan db:seed --class=DemoAdminSeeder`. Running it again resets the account's name and password to the values above.
 
 ### Running the application
 
@@ -137,6 +145,9 @@ Standard Laravel layout, plus:
 
 ## Business rules
 
+- **Prices** are shown in euros. The currency is set once, with `APP_CURRENCY` in `.env` (read in `config/app.php`).
+- **Product images** are stored on Laravel's `public` disk in `storage/app/public/products`. Replacing or removing an image, or deleting its product, deletes only that product's file.
+  Image links are built from `APP_URL`, so set it to the address you open the panel at (for example `http://localhost:8000` with `php artisan serve`), and run `php artisan storage:link` once.
 - **Revenue** counts only orders with the status `delivered`. Pending, processing, cancelled and refunded orders are excluded. The rule will live in one place in the code when orders are implemented, so it can be changed deliberately.
 
 ## Design system
@@ -154,5 +165,6 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 - The dashboard has no data source yet: every key figure, chart and list shows an empty state, and no sample figures are used. Charts (Chart.js) and real figures are added once orders, products and customers are stored.
 - Sections that are not built yet appear in the navigation as unavailable.
 - Authentication covers login and logout only: there is no registration, password reset, "remember me" or role system. Administrator accounts are created by seeders.
-- Search is shown disabled until the catalogue exists.
+- The search field in the top bar is not connected yet; products are searched and filtered on the Products page.
+- Categories are fixed by the seeder; there is no page to add or rename them.
 - Screenshots will be added once the interface is built.

@@ -39,6 +39,8 @@
                 <x-admin.topbar :breadcrumbs="$breadcrumbs ?? [['label' => $title]]" />
 
                 <main id="main-content" class="app-content" tabindex="-1">
+                    <x-flash />
+
                     {{ $slot }}
                 </main>
             </div>

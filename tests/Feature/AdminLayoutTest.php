@@ -42,25 +42,20 @@ class AdminLayoutTest extends TestCase
 
     public function test_a_section_stays_current_on_its_sub_pages(): void
     {
-        $this->defineRoutes(function () {
-            Route::get('/products', fn () => view('dashboard'))->name('products.index');
-            Route::get('/products/create', fn () => view('dashboard'))->name('products.create');
-        });
+        $html = $this->actingAs(User::factory()->create())->get(route('products.create'))->assertOk()->getContent();
 
-        $html = $this->get('/products/create')->assertOk()->getContent();
-
-        $this->assertMatchesRegularExpression('#<a href="'.preg_quote(url('/products'), '#').'" class="nav-item"\s+aria-current="page"#', $html);
+        $this->assertMatchesRegularExpression('#<a href="'.preg_quote(route('products.index'), '#').'" class="nav-item"\s+aria-current="page"#', $html);
         $this->assertDoesNotMatchRegularExpression('#<a href="'.preg_quote(route('dashboard'), '#').'" class="nav-item"\s+aria-current#', $html);
     }
 
     public function test_sections_without_a_route_are_not_rendered_as_links(): void
     {
-        $this->assertFalse(Route::has('products.index'));
+        $this->assertFalse(Route::has('orders.index'));
 
         $this->dashboard()
             ->assertSee('<span class="nav-item" data-unavailable>', false)
-            ->assertSee('Products<span class="visually-hidden"> (not available yet)</span>', false)
-            ->assertDontSee('href="'.url('/products').'"', false);
+            ->assertSee('Orders<span class="visually-hidden"> (not available yet)</span>', false)
+            ->assertDontSee('href="'.url('/orders').'"', false);
     }
 
     public function test_drawer_controls_reference_the_sidebar(): void
@@ -123,16 +118,6 @@ class AdminLayoutTest extends TestCase
     {
         // TestCase disables Vite, so a missing public/build must never break rendering in tests.
         $this->dashboard()->assertDontSee('ViteManifestNotFoundException');
-    }
-
-    /**
-     * Registers routes for later phases (web middleware, refreshed name lookups),
-     * so the layout can be tested against them.
-     */
-    private function defineRoutes(callable $routes): void
-    {
-        Route::middleware('web')->group($routes);
-        Route::getRoutes()->refreshNameLookups();
     }
 
     private function dashboard(): TestResponse

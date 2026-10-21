@@ -189,3 +189,99 @@
         font-size: var(--text-2xl);
     }
 }
+
+/* Badge: small, quiet status label. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.badge--neutral {
+    background: var(--color-sidebar);
+    color: var(--color-text-secondary);
+}
+
+.badge--success {
+    background: var(--color-success-wash);
+    color: var(--color-success);
+}
+
+.badge--danger {
+    background: var(--color-danger-wash);
+    color: var(--color-danger);
+}
+
+/* Flash message after an action. */
+.flash {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-success-wash);
+    border-left: 2px solid var(--color-success);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--color-success);
+}
+
+.flash .icon {
+    flex: none;
+}
+
+/* Pagination below a table. */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+    font-size: var(--text-sm);
+}
+
+.pagination__summary {
+    color: var(--color-text-secondary);
+}
+
+.pagination__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+}
+
+.pagination__link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--control-size);
+    min-height: var(--control-size);
+    padding: 0 var(--space-3);
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text-secondary);
+}
+
+a.pagination__link:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+}
+
+.pagination__link[aria-current='page'] {
+    color: var(--color-text);
+    font-weight: var(--weight-medium);
+    background: var(--color-surface);
+    border-color: var(--color-border);
+}
+
+.pagination__link[aria-disabled='true'],
+.pagination__link--gap {
+    color: var(--color-text-muted);
+}

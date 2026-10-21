@@ -1,6 +1,7 @@
 /* Form fields and buttons. */
 .field {
     display: grid;
+    align-content: start;
     gap: var(--space-2);
 }
 
@@ -64,4 +65,103 @@
 
 .button--primary:hover {
     background: color-mix(in srgb, var(--color-text) 88%, var(--color-accent));
+}
+
+/* Quieter actions: secondary is outlined, ghost is text-only, danger is for deleting. */
+.button--secondary {
+    background: var(--color-surface);
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+}
+
+.button--secondary:hover {
+    border-color: var(--color-text-muted);
+}
+
+.button--ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+}
+
+.button--ghost:hover {
+    color: var(--color-text);
+    background: var(--color-hover);
+}
+
+.button--danger {
+    background: var(--color-surface);
+    border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-border));
+    color: var(--color-danger);
+}
+
+.button--danger:hover {
+    background: var(--color-danger-wash);
+}
+
+.field__hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.field__select {
+    appearance: none;
+    padding-right: var(--space-8);
+    /* Chevron drawn in --color-text-muted (#858078). */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23858078' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right var(--space-3) center;
+    background-repeat: no-repeat;
+}
+
+.field__textarea {
+    min-height: 8rem;
+    padding: var(--space-3);
+    line-height: var(--leading-normal);
+    resize: vertical;
+}
+
+.field__file {
+    width: 100%;
+    font-size: var(--text-sm);
+}
+
+.field__file::file-selector-button {
+    margin-right: var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    font: inherit;
+    cursor: pointer;
+}
+
+.field--choice {
+    border: 0;
+    padding: 0;
+    min-width: 0;
+}
+
+.choice {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: var(--text-sm);
+    cursor: pointer;
+}
+
+.choice input {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+    flex: none;
+    accent-color: var(--color-text);
+}
+
+/* Summary shown above the form when validation fails. */
+.form-alert {
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-danger-wash);
+    border-left: 2px solid var(--color-danger);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    color: var(--color-danger);
 }

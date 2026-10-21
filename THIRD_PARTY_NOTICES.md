@@ -24,7 +24,7 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ```
 
-The `chevron-down`, `log-out`, `search`, `shopping-bag` and `x` icons are derived from the [Feather](https://feathericons.com) project:
+The `check`, `chevron-down`, `log-out`, `plus`, `search`, `shopping-bag`, `trash-2` and `x` icons are derived from the [Feather](https://feathericons.com) project:
 
 ```
 The MIT License (MIT)

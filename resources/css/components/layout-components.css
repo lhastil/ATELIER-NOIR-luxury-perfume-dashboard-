@@ -27,6 +27,12 @@
     border-color: var(--color-border);
 }
 
+.icon-button--danger:hover {
+    color: var(--color-danger);
+    background: var(--color-danger-wash);
+    border-color: transparent;
+}
+
 .icon-button:disabled {
     opacity: 0.5;
 }

@@ -82,6 +82,17 @@ return [
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Store Currency
+    |--------------------------------------------------------------------------
+    |
+    | ISO 4217 code used to display every price in the admin panel.
+    |
+    */
+
+    'currency' => env('APP_CURRENCY', 'EUR'),
+
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*
