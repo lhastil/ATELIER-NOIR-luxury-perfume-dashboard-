@@ -2,7 +2,7 @@
 
 An admin panel for managing a luxury perfume store: product catalog, categories, orders, customers, messages and store analytics. Built as a portfolio project with Laravel and server-rendered Blade views.
 
-> **Project status: early development.** The Laravel foundation and the admin layout (design tokens, sidebar, top navigation, mobile drawer) are in place. The admin features below are not built yet. They are added phase by phase and this README is updated as each one lands.
+> **Project status: early development.** The Laravel foundation, the admin layout (design tokens, sidebar, top navigation, mobile drawer) and the dashboard structure are in place. The dashboard shows empty states until real store data exists. The other admin features below are not built yet; they are added phase by phase and this README is updated as each one lands.
 
 ## Features
 
@@ -10,7 +10,7 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 | --- | --- |
 | Laravel 13 foundation, MySQL setup, test tooling | Done |
 | Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
-| Dashboard content and reusable page components | Planned |
+| Dashboard structure and reusable content components (empty states until store data exists) | Done |
 | Admin authentication (login, logout, remember me, protected routes) | Planned |
 | Categories and products (CRUD, image upload, search, filters, pagination) | Planned |
 | Customers, orders and order items (status updates, totals) | Planned |
@@ -117,11 +117,16 @@ Standard Laravel layout, plus:
 
 - `resources/css/base/`: design tokens (`tokens.css`), fonts and global styles
 - `resources/css/layout/`: application shell, sidebar and top navigation
-- `resources/css/components/`: styles for shared layout components
-- `resources/js/ui/`: navigation drawer and dropdown behaviour (vanilla JavaScript)
-- `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `icon`, `avatar`, `dropdown`, `page-header`)
+- `resources/css/components/`: styles for shared layout and content components
+- `resources/css/pages/`: page-specific layout (dashboard grid)
+- `resources/js/ui/`: navigation drawer, dropdown and scrollable-table behaviour (vanilla JavaScript)
+- `resources/views/components/`: Blade components (`layouts/admin`, `admin/*`, `icon`, `avatar`, `dropdown`, `page-header`, `card`, `stat-card`, `chart-panel`, `empty-state`, `table`)
 - `compose.yaml`: local MySQL server
 - `docker/mysql/init/`: one-time MySQL initialisation (creates the testing database)
+
+## Business rules
+
+- **Revenue** counts only orders with the status `delivered`. Pending, processing, cancelled and refunded orders are excluded. The rule will live in one place in the code when orders are implemented, so it can be changed deliberately.
 
 ## Design system
 
@@ -135,6 +140,7 @@ Released under the [MIT License](LICENSE). Third-party fonts and icons are liste
 
 ## Known limitations
 
-- Only the layout exists. The dashboard page shows a temporary "In preparation" notice, and sections that are not built yet appear in the navigation as unavailable.
+- The dashboard has no data source yet: every key figure, chart and list shows an empty state, and no sample figures are used. Charts (Chart.js) and real figures are added once orders, products and customers are stored.
+- Sections that are not built yet appear in the navigation as unavailable.
 - There is no login yet, so the admin layout is publicly reachable during local development. Search is shown disabled until the catalogue exists.
 - Screenshots will be added once the interface is built.

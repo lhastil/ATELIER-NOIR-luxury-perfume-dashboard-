@@ -1,0 +1,80 @@
+/*
+ * Dashboard grid. Desktop: four key figures, then 2:1 rows of panels.
+ * Tablet and phones: figures in pairs, panels stacked. Below 360px: one column.
+ */
+/* minmax(0, …) tracks and min-width: 0 keep long content (large text sizes) from widening the page. */
+.dashboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+}
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+}
+
+.stat-grid > li {
+    min-width: 0;
+}
+
+/* Label, value and hint share rows across a line of cards, so values align even when a label wraps. */
+@supports (grid-template-rows: subgrid) {
+    .stat-grid > li,
+    .stat-grid .stat-card {
+        display: grid;
+        grid-row: span 3;
+        grid-template-rows: subgrid;
+    }
+
+    .stat-grid .stat-card {
+        row-gap: var(--space-3);
+    }
+}
+
+.dashboard-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    gap: var(--space-6);
+}
+
+/*
+ * Reserves the chart's space up front, so drawing it later never shifts the page.
+ * A minimum rather than a fixed height, so an empty state at large text sizes grows the card instead of spilling out.
+ */
+.chart-panel__area {
+    display: grid;
+    min-height: 18rem;
+}
+
+@media (width < 64em) {
+    .stat-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (width < 48em) {
+    .dashboard,
+    .dashboard-row {
+        gap: var(--space-4);
+    }
+
+    .stat-grid {
+        gap: var(--space-3);
+    }
+
+    .chart-panel__area {
+        min-height: 14rem;
+    }
+}
+
+@media (width < 22.5em) {
+    .stat-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
