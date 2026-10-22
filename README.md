@@ -218,13 +218,15 @@ Vercel's filesystem is read-only apart from a temporary `/tmp` folder, so there 
 | `APP_KEY` | generate one locally with `php artisan key:generate --show` and keep a private copy |
 | `APP_URL` | the deployment's `https://` address |
 | `DB_*` | the connection details of a hosted MySQL-compatible database (for example TiDB Cloud Starter, which requires TLS) |
-| `MYSQL_ATTR_SSL_CA` | the path of a certificate bundle inside the Vercel runtime, needed for TLS; to be confirmed on a first deployment |
+| `MYSQL_ATTR_SSL_CA` | `config/certs/isrgrootx1.pem`, which turns on TLS with server certificate verification (see below) |
 | `TRUSTED_PROXIES` | `*`, so links use `https` behind Vercel's proxy (read by `bootstrap/app.php`; it must be a real environment variable of the host) |
 | `SESSION_DRIVER`, `CACHE_STORE` | `database`, so sessions and the login throttle persist between requests |
 | `SESSION_SECURE_COOKIE` | `true` |
 | `LOG_CHANNEL` | `stderr` |
 | `VIEW_COMPILED_PATH` | `/tmp/views` |
 | `APP_SERVICES_CACHE`, `APP_PACKAGES_CACHE`, `APP_CONFIG_CACHE`, `APP_ROUTES_CACHE`, `APP_EVENTS_CACHE` | `/tmp/services.php`, `/tmp/packages.php`, `/tmp/config.php`, `/tmp/routes.php`, `/tmp/events.php` |
+
+TiDB Cloud Starter only accepts TLS connections, and its certificates are issued by Let's Encrypt. The repository therefore contains Let's Encrypt's public ISRG Root X1 certificate, `config/certs/isrgrootx1.pem` (SHA-256 fingerprint `96:BC:EC:06:26:49:76:F3:74:60:77:9A:CF:28:C5:A7:CF:E8:A3:C0:AA:E1:1A:8F:FC:EE:05:C0:BD:DF:08:C6`, valid until June 2035). It is not a secret and is deployed with the code. `config/database.php` reads `MYSQL_ATTR_SSL_CA` relative to the project root, so the same value works on Vercel and on your own computer, and it always verifies the server's certificate when the setting is present. Leave it unset for the local Docker server, which does not use TLS.
 
 There is no shell on Vercel, so the database is prepared once from your own computer with the hosted database's details in a local, uncommitted environment: `php artisan migrate --force`, `php artisan db:seed --class=CategorySeeder --force`, and the first administrator as in step 4 above. Migrations are deliberately not part of the Vercel build.
 

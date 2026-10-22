@@ -59,9 +59,14 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // TLS for hosted databases such as TiDB Cloud: MYSQL_ATTR_SSL_CA is a CA file
+            // path relative to the project root (for example config/certs/isrgrootx1.pem),
+            // and the server certificate is then always verified. Unset, no TLS is used.
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA') ? base_path(env('MYSQL_ATTR_SSL_CA')) : null,
+            ]) + (env('MYSQL_ATTR_SSL_CA') && defined(Mysql::class.'::ATTR_SSL_VERIFY_SERVER_CERT') ? [
+                Mysql::ATTR_SSL_VERIFY_SERVER_CERT => true,
+            ] : []) : [],
         ],
 
         'mariadb' => [
