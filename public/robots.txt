@@ -1,2 +1,5 @@
+# Atelier Noir is a private admin panel. Crawling is allowed on purpose so
+# search engines can read the X-Robots-Tag: noindex header on every page;
+# disallowing paths here would hide that header and let bare URLs be indexed.
 User-agent: *
 Disallow:

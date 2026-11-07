@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\PreventSearchIndexing;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,6 +13,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->append(PreventSearchIndexing::class);
+
         // Behind a hosting proxy that handles HTTPS, such as Vercel, set the host
         // environment variable TRUSTED_PROXIES=* so links and the client IP used
         // for login throttling come from the proxy's headers. Leave it unset

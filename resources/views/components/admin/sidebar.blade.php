@@ -12,6 +12,7 @@
         'Administration' => [
             ['route' => 'profile.edit', 'icon' => 'circle-user', 'label' => 'My Profile'],
             ['route' => 'settings.edit', 'icon' => 'settings', 'label' => 'Store Settings'],
+            ['route' => 'users.create', 'icon' => 'user-plus', 'label' => 'Add User'],
         ],
     ];
 
