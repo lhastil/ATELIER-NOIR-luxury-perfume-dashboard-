@@ -6,16 +6,17 @@ An admin panel for managing a luxury perfume store: product catalog, categories,
 
 ## Features
 
-| Area | Status |
-| --- | --- |
-| Laravel 13 foundation, MySQL setup, test tooling | Done |
-| Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer) | Done |
-| Dashboard structure and reusable content components | Done |
-| Admin authentication (login, logout, login throttling, protected routes) | Done |
-| Products (create, edit, delete, image upload, search, filters, pagination) and seeded categories | Done |
+| Area                                                                                                           | Status |
+|----------------------------------------------------------------------------------------------------------------| --- |
+| Laravel 13 foundation, MySQL setup, test tooling                                                               | Done |
+| Design tokens, typography and admin layout (sidebar, top navigation, mobile drawer)                            | Done |
+| Dashboard structure and reusable content components                                                            | Done |
+| Admin authentication (login, logout, login throttling, protected routes)                                       | Done |
+| Products (create, edit, delete, image upload, search, filters, pagination) and seeded categories               | Done |
 | Customers (search, details, order history) and orders (search, status filter, details, totals, status updates) | Done |
-| Dashboard figures, revenue and order charts (Chart.js), recent orders and best sellers from the stored data | Done |
-| Messages, profile, password change and store settings | Planned |
+| Dashboard figures, revenue and order charts (Chart.js), recent orders and best sellers from the stored data    | Done |
+| Administrator accounts (add a user, edit your own profile, change your password)                               | Done |
+| Messages and store settings                                                                                    | Planned |
 
 ## Screenshots
 
@@ -319,7 +320,7 @@ Released under the [MIT License](LICENSE). Third-party fonts, icons and the Char
 - The dashboard has no date filter or comparison with earlier periods. The sample orders are dated relative to the day they were first seeded, so as time passes their revenue moves out of the six-month chart.
 - The dashboard loads every delivered order with its items to add up revenue, which is fine for a store of this size but would need a database-level sum for a very large order history.
 - Sections that are not built yet appear in the navigation as unavailable.
-- Authentication covers login and logout only: there is no registration, password reset, password change, "remember me" or role system. Locally, the seeder creates the demo administrator; in production, the first administrator is created with Tinker (see [Running in production](#running-in-production)).
+- Authentication covers login, logout, adding users from the admin panel and changing your own profile and password: there is no public registration, password reset, "remember me" or role system. Changing a password does not sign out other browsers where the account is already signed in. Locally, the seeder creates the demo administrator; in production, the first administrator is created with Tinker (see [Running in production](#running-in-production)).
 - The search field in the top bar is not connected: it is shown disabled. Products, customers and orders each have their own search on their list page.
 - List searches use SQL `LIKE`, so `%` and `_` in a search act as wildcards. Accent matching also differs between databases: MySQL treats "cedre" and "Cèdre" as a match, SQLite does not.
 - Categories are fixed by the seeder; there is no page to add or rename them.

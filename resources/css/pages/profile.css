@@ -1,0 +1,5 @@
+/* My profile: the profile form and the password form, one above the other. */
+.profile-forms {
+    display: grid;
+    gap: var(--space-8);
+}
