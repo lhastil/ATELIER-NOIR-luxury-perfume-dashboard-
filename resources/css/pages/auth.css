@@ -37,6 +37,27 @@
     margin-top: var(--space-8);
 }
 
+/* Password field with its show/hide button inside the right edge. */
+.password-field {
+    position: relative;
+}
+
+.password-field__input {
+    padding-right: var(--control-size);
+}
+
+.password-field__toggle {
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+}
+
+.password-field__toggle[hidden],
+.password-field__toggle .icon[hidden] {
+    display: none;
+}
+
 .auth-form__submit {
     width: 100%;
     margin-top: var(--space-2);

@@ -26,16 +26,28 @@ export function initCharts(root = document) {
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const locale = document.documentElement.lang || 'en';
 
-    Chart.defaults.font.family = token('--font-sans');
+    const fontFamily = token('--font-sans');
+    Chart.defaults.font.family = fontFamily;
     Chart.defaults.color = token('--color-text-secondary');
 
-    canvases.forEach((canvas) => {
-        try {
-            drawChart(canvas, JSON.parse(canvas.dataset.chart), { token, reduceMotion, locale });
-        } catch {
-            // Shows this chart's figures as a table instead.
-            canvas.closest('.chart-figure')?.classList.add('is-unavailable');
-        }
+    // Chart.js sizes the axis label area from text measured when the chart is first
+    // drawn. Inter loads with font-display: swap, so drawing earlier measured the
+    // narrower fallback font and the wider Inter labels later ran past the canvas
+    // edge (the "P" of "Processing" was cut off). Waiting for the font keeps the
+    // measured and the drawn text the same; if it cannot load, both use the fallback.
+    const fontReady = document.fonts?.load
+        ? document.fonts.load(`${Chart.defaults.font.size}px ${fontFamily}`).catch(() => {})
+        : Promise.resolve();
+
+    return fontReady.then(() => {
+        canvases.forEach((canvas) => {
+            try {
+                drawChart(canvas, JSON.parse(canvas.dataset.chart), { token, reduceMotion, locale });
+            } catch {
+                // Shows this chart's figures as a table instead.
+                canvas.closest('.chart-figure')?.classList.add('is-unavailable');
+            }
+        });
     });
 }
 

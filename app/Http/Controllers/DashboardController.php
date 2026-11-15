@@ -22,17 +22,23 @@ class DashboardController extends Controller
 
     public function __invoke(): View
     {
-        $deliveredOrders = Order::delivered()->with('items')->get();
+        $delivered = $this->deliveredTotals();
         $statusCounts = Order::query()->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
 
+        // The chart only uses delivered orders placed from its first month onwards.
+        $chartOrders = Order::delivered()
+            ->where('placed_at', '>=', now()->startOfMonth()->subMonths(self::REVENUE_MONTHS - 1))
+            ->with('items')
+            ->get();
+
         return view('dashboard', [
-            'revenueCents' => $deliveredOrders->sum('total_cents'),
-            'deliveredOrderCount' => $deliveredOrders->count(),
+            'revenueCents' => $delivered['revenueCents'],
+            'deliveredOrderCount' => $delivered['orderCount'],
             'orderCount' => Order::count(),
             'productCount' => Product::count(),
             'activeProductCount' => Product::where('is_active', true)->count(),
             'customerCount' => Customer::count(),
-            'revenueByMonth' => $this->revenueByMonth($deliveredOrders),
+            'revenueByMonth' => $this->revenueByMonth($chartOrders),
             'ordersByStatus' => collect(Order::STATUSES)->mapWithKeys(fn (string $status) => [$status => (int) ($statusCounts[$status] ?? 0)]),
             'recentOrders' => Order::with(['customer', 'items'])->latest('placed_at')->latest('id')->limit(5)->get(),
             'bestSellers' => $this->bestSellers(),
@@ -40,11 +46,37 @@ class DashboardController extends Controller
     }
 
     /**
+     * All-time delivered revenue in cents and the number of delivered orders,
+     * added up by the database in one query instead of loading every order.
+     *
+     * Each line is rounded to whole cents before multiplying by the quantity,
+     * exactly like OrderItem::lineTotalCents(). The left join keeps delivered
+     * orders without items in the count, and COALESCE gives 0 when there are
+     * no delivered orders.
+     *
+     * @return array{revenueCents: int, orderCount: int}
+     */
+    private function deliveredTotals(): array
+    {
+        $totals = Order::delivered()
+            ->leftJoin('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->selectRaw('count(distinct orders.id) as order_count')
+            ->selectRaw('coalesce(sum(round(order_items.unit_price * 100) * order_items.quantity), 0) as revenue_cents')
+            ->toBase()
+            ->first();
+
+        return [
+            'revenueCents' => (int) $totals->revenue_cents,
+            'orderCount' => (int) $totals->order_count,
+        ];
+    }
+
+    /**
      * Delivered revenue in cents for each of the last six calendar months, oldest
      * first, keyed by "Y-m". Revenue counts in the month the order was placed;
      * months without delivered orders are 0.
      *
-     * @param  Collection<int, Order>  $deliveredOrders
+     * @param  Collection<int, Order>  $deliveredOrders  delivered orders, at least those in the chart's months
      * @return array<string, int>
      */
     private function revenueByMonth(Collection $deliveredOrders): array

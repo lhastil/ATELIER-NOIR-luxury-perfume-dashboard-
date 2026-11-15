@@ -5,12 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProductRequest;
 use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductImage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Throwable;
 
 class ProductController extends Controller
 {
@@ -22,8 +21,7 @@ class ProductController extends Controller
         $status = in_array($request->query('status'), ['active', 'hidden'], true) ? $request->query('status') : null;
 
         $products = Product::query()
-            // Only the image's id is needed for its address, not its bytes.
-            ->with(['category', 'image:id,product_id'])
+            ->with('category')
             ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
@@ -54,25 +52,32 @@ class ProductController extends Controller
     public function store(ProductRequest $request): RedirectResponse
     {
         $data = $request->safe()->except(['image', 'remove_image']);
+        $imagePath = null;
 
-        // The product and its image are saved together, or not at all.
-        $product = DB::transaction(function () use ($request, $data) {
-            $product = Product::create($data);
+        if ($request->hasFile('image')) {
+            $imagePath = $this->storeImage($request);
 
-            if ($request->hasFile('image')) {
-                $product->image()->create(ProductImage::attributesFor($request->file('image')));
+            if ($imagePath === null) {
+                return $this->imageUploadFailed();
+            }
+        }
+
+        try {
+            $product = Product::create([...$data, 'image_path' => $imagePath]);
+        } catch (Throwable $exception) {
+            // The product was not saved, so its new file is not needed.
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
             }
 
-            return $product;
-        });
+            throw $exception;
+        }
 
         return redirect()->route('products.index')->with('status', "“{$product->name}” was added to the catalog.");
     }
 
     public function edit(Product $product): View
     {
-        $product->load('image:id,product_id');
-
         return view('products.edit', [
             'product' => $product,
             'categories' => Category::orderBy('name')->get(),
@@ -82,45 +87,63 @@ class ProductController extends Controller
     public function update(ProductRequest $request, Product $product): RedirectResponse
     {
         $data = $request->safe()->except(['image', 'remove_image']);
+        $oldPath = $product->image_path;
+        $newPath = $oldPath;
 
-        // If any part fails, the product keeps its previous details and image.
-        DB::transaction(function () use ($request, $product, $data) {
-            $product->update($data);
+        if ($request->hasFile('image')) {
+            $newPath = $this->storeImage($request);
 
-            if ($request->hasFile('image')) {
-                // A new record, so the replaced image gets a new id and a new address.
-                $product->image()->delete();
-                $product->image()->create(ProductImage::attributesFor($request->file('image')));
-            } elseif ($request->boolean('remove_image')) {
-                $product->image()->delete();
+            if ($newPath === null) {
+                return $this->imageUploadFailed();
             }
-        });
+        } elseif ($request->boolean('remove_image')) {
+            $newPath = null;
+        }
+
+        try {
+            // updateOrFail() throws if the product could not be saved.
+            $product->updateOrFail([...$data, 'image_path' => $newPath]);
+        } catch (Throwable $exception) {
+            // The product keeps its previous image, so only the new upload is removed.
+            if ($newPath && $newPath !== $oldPath) {
+                Storage::disk('public')->delete($newPath);
+            }
+
+            throw $exception;
+        }
+
+        // The old file is deleted only once the product points to its new image (or none).
+        if ($oldPath && $oldPath !== $newPath) {
+            Storage::disk('public')->delete($oldPath);
+        }
 
         return redirect()->route('products.index')->with('status', "“{$product->name}” was updated.");
     }
 
     public function destroy(Product $product): RedirectResponse
     {
-        // The database deletes the product's image together with it.
         $product->delete();
+
+        // Deleting a file that is already missing does nothing.
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
 
         return redirect()->route('products.index')->with('status', "“{$product->name}” was deleted.");
     }
 
     /**
-     * Serves a product's stored image. The content type is the one detected from
-     * the file when it was uploaded; the request cannot choose what is returned.
+     * Stores the uploaded image under a random name, e.g. products/abc123.jpg.
+     * The extension comes from the file's content, not the name it was sent with.
+     * Returns null if the file could not be written.
      */
-    public function image(Product $product): Response
+    private function storeImage(ProductRequest $request): ?string
     {
-        $image = $product->image()->firstOrFail();
+        return $request->file('image')->store('products', 'public') ?: null;
+    }
 
-        return response($image->data, 200, [
-            'Content-Type' => $image->mime_type,
-            'Content-Length' => (string) strlen($image->data),
-            // A replaced image gets a new id, so a new address (see Product::imageUrl).
-            'Cache-Control' => 'private, max-age=31536000, immutable',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+    private function imageUploadFailed(): RedirectResponse
+    {
+        return back()->withInput()->withErrors(['image' => 'The image could not be uploaded. Please try again.']);
     }
 }

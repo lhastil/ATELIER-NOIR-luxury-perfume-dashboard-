@@ -15,7 +15,7 @@
                 'Status',
             ]">
                 @foreach ($customer->orders as $order)
-                    <tr>
+                    <tr class="table-row--record">
                         <td><a class="table-link" href="{{ route('orders.show', $order) }}">{{ $order->number }}</a></td>
                         <td>{{ $order->placed_at->isoFormat('D MMM YYYY') }}</td>
                         <td class="is-numeric">{{ $order->items->sum('quantity') }}</td>

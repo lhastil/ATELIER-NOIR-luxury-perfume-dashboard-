@@ -1,0 +1,98 @@
+/*
+ * Notification bell in the top bar: the unread badge and the list in its
+ * dropdown. Built on the dropdown styles in layout-components.css.
+ */
+.notifications-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    min-width: 1rem;
+    height: 1rem;
+    padding: 0 3px;
+    border-radius: var(--radius-full);
+    background: var(--color-accent-strong); /* AA contrast for the white figure */
+    color: var(--color-surface);
+    font-size: 0.625rem;
+    font-weight: var(--weight-semibold);
+    line-height: 1rem;
+    text-align: center;
+}
+
+.notifications-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+}
+
+.notifications-header__action {
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--color-accent-strong);
+    font-size: var(--text-xs);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.notifications-header__action[aria-disabled='true'] {
+    cursor: progress;
+    opacity: 0.6;
+}
+
+/* Shown inside the dropdown when "Mark all as read" fails. */
+.notifications-error {
+    margin: 0 var(--space-3) var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-danger);
+}
+
+.notifications-error[hidden] {
+    display: none;
+}
+
+.notifications-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+/* Two lines of text, so the icon and dot sit at the top. */
+.notification {
+    align-items: flex-start;
+    font-size: var(--text-sm);
+}
+
+.notification .icon {
+    margin-top: 2px;
+}
+
+.notification__text {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-width: 0;
+}
+
+.notification__message {
+    overflow-wrap: anywhere;
+}
+
+.notification--unread .notification__message {
+    font-weight: var(--weight-medium);
+}
+
+.notification__time {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+.notification__dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    margin-top: 7px;
+    border-radius: var(--radius-full);
+    background: var(--color-accent);
+}

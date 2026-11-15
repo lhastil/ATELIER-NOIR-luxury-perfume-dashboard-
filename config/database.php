@@ -59,6 +59,11 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // The session time zone, matching the application's UTC clock. Without it
+            // the server's own zone applies (for example Iran Standard Time), so rows
+            // stamped by MySQL itself with NOW() or CURRENT_TIMESTAMP read hours ahead
+            // of Laravel's times and stay "new", e.g. unread in the notification bell.
+            'timezone' => env('DB_TIMEZONE', '+00:00'),
             // TLS for hosted databases such as TiDB Cloud: MYSQL_ATTR_SSL_CA is a CA file
             // path relative to the project root (for example config/certs/isrgrootx1.pem),
             // and the server certificate is then always verified. Unset, no TLS is used.

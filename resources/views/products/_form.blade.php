@@ -31,7 +31,7 @@
 
         <x-card title="Fragrance details">
             <div class="form-grid">
-                <x-form.select name="category_id" label="Category" :options="$categories->pluck('name', 'id')" :value="$product->category_id" placeholder="Choose a category" required />
+                <x-form.select name="category_id" label="Category" :options="$categories->pluck('name', 'id')" :value="$product->category_id" placeholder="No category" />
                 <x-form.select name="concentration" label="Concentration" :options="$concentrations" :value="$product->concentration" placeholder="Choose a concentration" required />
                 <x-form.input name="volume_ml" label="Volume (ml)" type="number" :value="$product->volume_ml" required min="1" max="1000" step="1" inputmode="numeric" />
             </div>
@@ -93,7 +93,7 @@
                         @enderror
                     </div>
 
-                    @if ($product->image)
+                    @if ($product->image_path)
                         <label class="choice">
                             <input type="checkbox" name="remove_image" value="1" @checked(old('remove_image'))>
                             <span>Remove the current image</span>

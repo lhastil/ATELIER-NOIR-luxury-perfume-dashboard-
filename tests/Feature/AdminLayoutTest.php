@@ -50,12 +50,14 @@ class AdminLayoutTest extends TestCase
 
     public function test_sections_without_a_route_are_not_rendered_as_links(): void
     {
-        $this->assertFalse(Route::has('messages.index'));
+        // Every sidebar section has a route now, so a nav item for a missing route is rendered directly.
+        $this->assertFalse(Route::has('reports.index'));
 
-        $this->dashboard()
+        $this->actingAs(User::factory()->create())
+            ->blade('<x-admin.nav-item route="reports.index" icon="layers" label="Reports" />')
             ->assertSee('<span class="nav-item" data-unavailable>', false)
-            ->assertSee('Messages<span class="visually-hidden"> (not available yet)</span>', false)
-            ->assertDontSee('href="'.url('/messages').'"', false);
+            ->assertSee('Reports<span class="visually-hidden"> (not available yet)</span>', false)
+            ->assertDontSee('href=', false);
     }
 
     public function test_drawer_controls_reference_the_sidebar(): void

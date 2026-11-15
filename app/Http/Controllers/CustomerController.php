@@ -19,14 +19,8 @@ class CustomerController extends Controller
         $customers = Customer::query()
             ->withCount('orders')
             ->withMax('orders', 'placed_at')
-            ->when($search !== '', fn ($query) => $query->where(function ($query) use ($search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-
-                foreach ($this->phoneSearchTerms($search) as $term) {
-                    $query->orWhere('phone', 'like', "%{$term}%");
-                }
-            }))
+            // Name, email or phone; see Customer::scopeSearch().
+            ->when($search !== '', fn ($query) => $query->search($search))
             ->orderBy('name')
             ->orderBy('id')
             ->paginate(10)
@@ -36,24 +30,6 @@ class CustomerController extends Controller
             'customers' => $customers,
             'search' => $search,
         ]);
-    }
-
-    /**
-     * Phone numbers are stored without spaces, such as +33639980001. The search is
-     * compared without spaces or punctuation, and a leading 0 (06 39 98…) is also
-     * tried as +33. A search without digits does not look at phone numbers.
-     *
-     * @return list<string>
-     */
-    private function phoneSearchTerms(string $search): array
-    {
-        $digits = preg_replace('/[^\d+]/', '', $search);
-
-        if (! preg_match('/\d/', $digits)) {
-            return [];
-        }
-
-        return str_starts_with($digits, '0') ? [$digits, '+33'.substr($digits, 1)] : [$digits];
     }
 
     public function show(Customer $customer): View

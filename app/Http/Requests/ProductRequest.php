@@ -28,7 +28,8 @@ class ProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:120'],
             'sku' => ['required', 'string', 'max:32', 'regex:/^[A-Z0-9-]+$/', Rule::unique('products', 'sku')->ignore($this->route('product'))],
             'brand' => ['required', 'string', 'max:100'],
-            'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
+            // Optional: "No category" sends an empty value, which is saved as NULL.
+            'category_id' => ['nullable', 'integer', Rule::exists('categories', 'id')],
             'concentration' => ['required', Rule::in(Product::CONCENTRATIONS)],
             'volume_ml' => ['required', 'integer', 'min:1', 'max:1000'],
             'price' => ['required', 'numeric', 'decimal:0,2', 'min:0', 'max:99999999.99'],

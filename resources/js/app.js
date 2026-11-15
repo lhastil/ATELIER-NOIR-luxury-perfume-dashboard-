@@ -1,11 +1,17 @@
 import { initConfirmSubmit } from './ui/confirm-submit.js';
 import { initDropdowns } from './ui/dropdown.js';
+import { initGlobalSearch } from './ui/global-search.js';
 import { initImagePreviews } from './ui/image-preview.js';
+import { initNotifications } from './ui/notifications.js';
+import { initPasswordToggles } from './ui/password-toggle.js';
 import { initScrollRegions } from './ui/scroll-region.js';
 import { initSidebarDrawer } from './ui/sidebar-drawer.js';
 
 initSidebarDrawer();
 initDropdowns();
+initGlobalSearch();
+initNotifications();
+initPasswordToggles();
 initScrollRegions();
 initImagePreviews();
 initConfirmSubmit();

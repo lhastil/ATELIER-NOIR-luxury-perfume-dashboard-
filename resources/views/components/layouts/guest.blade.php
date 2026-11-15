@@ -12,7 +12,8 @@
 
         <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
 
-        @vite(['resources/css/app.css'])
+        {{-- The script adds small enhancements such as the password visibility toggle. --}}
+        @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body>
         <main class="auth-page">

@@ -16,7 +16,8 @@
                 ['label' => 'Line total', 'numeric' => true],
             ]">
                 @foreach ($order->items as $item)
-                    <tr>
+                    {{-- Only line items whose product still exists link anywhere. --}}
+                    <tr @class(['table-row--record' => $item->product])>
                         <td>
                             @if ($item->product)
                                 <a class="table-link" href="{{ route('products.edit', $item->product) }}">{{ $item->product_name }}</a>
@@ -62,7 +63,13 @@
                 <dl class="detail-list">
                     <div>
                         <dt>Name</dt>
-                        <dd><a href="{{ route('customers.show', $order->customer) }}">{{ $order->customer->name }}</a></dd>
+                        <dd>
+                            @can('access-customers')
+                                <a href="{{ route('customers.show', $order->customer) }}">{{ $order->customer->name }}</a>
+                            @else
+                                {{ $order->customer->name }}
+                            @endcan
+                        </dd>
                     </div>
                     <div>
                         <dt>Email</dt>

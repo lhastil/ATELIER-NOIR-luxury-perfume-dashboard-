@@ -31,20 +31,21 @@ class CustomerManagementTest extends TestCase
         $this->signIn();
 
         $this->get(route('customers.index'))
+            ->mainContent()
             ->assertSeeInOrder(['Amélie Laurent', '<td class="is-numeric">0</td>', 'Julien Moreau', '<td class="is-numeric">2</td>', '14 Sep 2026'], false)
             ->assertDontSee('13 Jul 2026');
 
-        $this->get(route('customers.index', ['search' => 'Laurent']))->assertSee('Amélie Laurent')->assertDontSee('Julien Moreau');
-        $this->get(route('customers.index', ['search' => 'julien.moreau@']))->assertSee('Julien Moreau')->assertDontSee('Amélie Laurent');
+        $this->get(route('customers.index', ['search' => 'Laurent']))->mainContent()->assertSee('Amélie Laurent')->assertDontSee('Julien Moreau');
+        $this->get(route('customers.index', ['search' => 'julien.moreau@']))->mainContent()->assertSee('Julien Moreau')->assertDontSee('Amélie Laurent');
 
         foreach (['06 39 98 00 02', '0639980002', '+33 6 39 98 00 02', '+33639980002', '39 98 00 02', '0002'] as $phone) {
-            $this->get(route('customers.index', ['search' => $phone]))->assertSee('1 customer matches the search')->assertSee('Julien Moreau')->assertDontSee('Amélie Laurent');
+            $this->get(route('customers.index', ['search' => $phone]))->mainContent()->assertSee('1 customer matches the search')->assertSee('Julien Moreau')->assertDontSee('Amélie Laurent');
         }
 
-        $this->get(route('customers.index', ['search' => '06 39 98']))->assertSee('Julien Moreau')->assertSee('Amélie Laurent');
-        $this->get(route('customers.index', ['search' => '07 39 98']))->assertSee('No matching customers');
-        $this->get(route('customers.index', ['search' => 'nobody']))->assertSee('No matching customers');
-        $this->get('/customers?search[]=x')->assertOk()->assertSee('Amélie Laurent')->assertSee('Julien Moreau');
+        $this->get(route('customers.index', ['search' => '06 39 98']))->mainContent()->assertSee('Julien Moreau')->assertSee('Amélie Laurent');
+        $this->get(route('customers.index', ['search' => '07 39 98']))->mainContent()->assertSee('No matching customers');
+        $this->get(route('customers.index', ['search' => 'nobody']))->mainContent()->assertSee('No matching customers');
+        $this->get('/customers?search[]=x')->assertOk()->mainContent()->assertSee('Amélie Laurent')->assertSee('Julien Moreau');
     }
 
     public function test_the_list_is_paginated_and_keeps_the_search(): void
@@ -67,6 +68,7 @@ class CustomerManagementTest extends TestCase
 
         $this->signIn()->get(route('customers.show', $customer))
             ->assertOk()
+            ->mainContent()
             ->assertSee('clara.fontaine@example.test')
             ->assertSee('<a href="tel:+33639980003">06 39 98 00 03</a>', false)
             ->assertDontSee('+33639980003</a>', false)

@@ -32,19 +32,21 @@ class UserRegistrationTest extends TestCase
             ->assertSee('<form method="POST" action="'.route('users.store').'"', false)
             ->assertSee('name="_token"', false)
             ->assertSee('name="password_confirmation"', false)
-            ->assertSee('Add User');
+            ->assertSee('name="role"', false)
+            ->assertSee('Add user');
     }
 
     public function test_a_valid_submission_creates_a_user_with_a_hashed_password(): void
     {
         $this->actingAs(User::factory()->create())
             ->post(route('users.store'), $this->validData())
-            ->assertRedirect(route('users.create'))
-            ->assertSessionHas('status', 'New Admin was added and can now sign in.');
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('status', 'New Admin was added as Admin and can now sign in.');
 
         $user = User::where('email', 'new@example.com')->firstOrFail();
 
         $this->assertSame('New Admin', $user->name);
+        $this->assertSame(User::ADMIN, $user->role);
         $this->assertNotSame('secret-pass-123', $user->password);
         $this->assertTrue(Hash::check('secret-pass-123', $user->password));
     }
@@ -97,6 +99,7 @@ class UserRegistrationTest extends TestCase
             'email' => 'new@example.com',
             'password' => 'secret-pass-123',
             'password_confirmation' => 'secret-pass-123',
+            'role' => User::ADMIN,
         ], $overrides);
     }
 }

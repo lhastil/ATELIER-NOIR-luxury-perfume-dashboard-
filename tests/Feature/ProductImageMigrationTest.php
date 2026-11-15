@@ -13,12 +13,22 @@ use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
- * The migration that moves product images into the database. It changes the
- * schema, so each test gets a freshly migrated database instead of a transaction.
+ * The historical migration that moved product images into the database. It
+ * changes the schema, so each test gets a freshly migrated database instead of
+ * a transaction. Images have since moved back to files (2026_11_11_000002, see
+ * ProductImagePathMigrationTest); that later migration is undone first so these
+ * tests start from the schema this one left behind.
  */
 class ProductImageMigrationTest extends TestCase
 {
     use DatabaseMigrations;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        (require database_path('migrations/2026_11_11_000002_move_product_images_to_files.php'))->down();
+    }
 
     public function test_existing_images_are_copied_and_their_files_kept(): void
     {

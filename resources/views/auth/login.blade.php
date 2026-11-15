@@ -31,15 +31,22 @@
 
             <div class="field">
                 <label class="field__label" for="password">Password</label>
-                <input
-                    id="password"
-                    class="field__input"
-                    type="password"
-                    name="password"
-                    autocomplete="current-password"
-                    required
-                    @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
-                >
+                {{-- The toggle is revealed by resources/js/ui/password-toggle.js; without JavaScript it stays hidden. --}}
+                <div class="password-field">
+                    <input
+                        id="password"
+                        class="field__input password-field__input"
+                        type="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                        @error('password') aria-invalid="true" aria-describedby="password-error" @enderror
+                    >
+                    <button type="button" class="icon-button password-field__toggle" aria-label="Show password" aria-controls="password" hidden data-password-toggle>
+                        <x-icon name="eye" data-password-toggle-show />
+                        <x-icon name="eye-off" hidden data-password-toggle-hide />
+                    </button>
+                </div>
                 @error('password')
                     <p id="password-error" class="field__error">{{ $message }}</p>
                 @enderror

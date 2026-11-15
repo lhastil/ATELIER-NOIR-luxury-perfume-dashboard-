@@ -8,12 +8,12 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Number;
 
 #[Fillable([
     'category_id', 'name', 'sku', 'brand', 'concentration', 'volume_ml',
-    'price', 'stock', 'is_active', 'description',
+    'price', 'stock', 'is_active', 'description', 'image_path',
 ])]
 class Product extends Model
 {
@@ -55,25 +55,13 @@ class Product extends Model
     }
 
     /**
-     * The uploaded image, stored in the database. Lists load it without its
-     * bytes (see ProductController), so only the image route reads the data.
-     *
-     * @return HasOne<ProductImage, $this>
-     */
-    public function image(): HasOne
-    {
-        return $this->hasOne(ProductImage::class);
-    }
-
-    /**
-     * Address of the image, or null without one. It includes the image's id,
-     * which changes whenever the image is replaced, so browsers can cache each
-     * version for a long time.
+     * Public address of the image file, or null without one. Every upload is
+     * stored under a new random name, so a replaced image gets a new address.
      */
     protected function imageUrl(): Attribute
     {
-        return Attribute::get(fn () => $this->image
-            ? route('products.image', ['product' => $this, 'v' => $this->image->id])
+        return Attribute::get(fn () => $this->image_path
+            ? Storage::disk('public')->url($this->image_path)
             : null);
     }
 }

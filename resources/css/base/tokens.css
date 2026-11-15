@@ -27,6 +27,7 @@
     --color-danger-wash: #f5e6e2;
 
     --color-hover: rgb(36 35 32 / 0.04);
+    --color-row-hover: rgb(164 138 96 / 0.06); /* A faint warm gold tint for record rows. */
     --color-backdrop: rgb(36 35 32 / 0.32);
 
     /* Typography */

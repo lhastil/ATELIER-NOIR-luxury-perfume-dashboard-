@@ -3,3 +3,30 @@
     display: grid;
     gap: var(--space-8);
 }
+
+/* Profile photo: a round preview, or the initials avatar, in the shared image field. */
+.profile-photo .image-field__preview img,
+.profile-photo .image-field__placeholder {
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-full);
+}
+
+.profile-photo .image-field__placeholder {
+    border: 0;
+    background: none;
+}
+
+/*
+ * Store settings: the details and logo cards, laid out like the profile page.
+ * The logo field reuses .image-field from the product form.
+ */
+.settings-form__sections {
+    display: grid;
+    gap: var(--space-8);
+}
+
+/* Logos are shown whole rather than cropped like product photos. */
+.settings-logo .image-field__preview img {
+    object-fit: contain;
+}

@@ -3,6 +3,9 @@
 namespace Tests;
 
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Http\Response;
+use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Assert;
 use RuntimeException;
 
 abstract class TestCase extends BaseTestCase
@@ -13,6 +16,17 @@ abstract class TestCase extends BaseTestCase
 
         // Views must render without a compiled front-end build (fresh clones, CI).
         $this->withoutVite();
+
+        // ->mainContent() narrows a page's assertions to its <main> element. The
+        // shared top bar lists recent orders, customers and messages (the
+        // notification bell), which would otherwise match assertDontSee() checks.
+        TestResponse::macro('mainContent', function () {
+            /** @var TestResponse $this */
+            $found = preg_match('#<main\b[^>]*>(.*)</main>#s', $this->getContent(), $match);
+            Assert::assertSame(1, $found, 'The response has no <main> element.');
+
+            return TestResponse::fromBaseResponse(new Response($match[1]));
+        });
     }
 
     /**

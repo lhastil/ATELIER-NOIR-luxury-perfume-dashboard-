@@ -37,13 +37,13 @@ class OrderManagementTest extends TestCase
 
         $this->signIn();
 
-        $this->get(route('orders.index', ['search' => '10002']))->assertSee('ORD-10002')->assertDontSee('ORD-10001');
-        $this->get(route('orders.index', ['search' => 'Laurent']))->assertSee('ORD-10001')->assertDontSee('ORD-10002');
-        $this->get(route('orders.index', ['search' => 'julien.moreau@']))->assertSee('ORD-10002')->assertDontSee('ORD-10001');
-        $this->get(route('orders.index', ['status' => 'delivered']))->assertSee('ORD-10001')->assertDontSee('ORD-10002');
-        $this->get(route('orders.index', ['search' => 'Laurent', 'status' => 'pending']))->assertSee('No matching orders');
-        $this->get(route('orders.index', ['search' => '10001', 'status' => 'pending']))->assertSee('No matching orders');
-        $this->get('/orders?search[]=x&status[]=pending')->assertOk()->assertSee('ORD-10001')->assertSee('ORD-10002');
+        $this->get(route('orders.index', ['search' => '10002']))->mainContent()->assertSee('ORD-10002')->assertDontSee('ORD-10001');
+        $this->get(route('orders.index', ['search' => 'Laurent']))->mainContent()->assertSee('ORD-10001')->assertDontSee('ORD-10002');
+        $this->get(route('orders.index', ['search' => 'julien.moreau@']))->mainContent()->assertSee('ORD-10002')->assertDontSee('ORD-10001');
+        $this->get(route('orders.index', ['status' => 'delivered']))->mainContent()->assertSee('ORD-10001')->assertDontSee('ORD-10002');
+        $this->get(route('orders.index', ['search' => 'Laurent', 'status' => 'pending']))->mainContent()->assertSee('No matching orders');
+        $this->get(route('orders.index', ['search' => '10001', 'status' => 'pending']))->mainContent()->assertSee('No matching orders');
+        $this->get('/orders?search[]=x&status[]=pending')->assertOk()->mainContent()->assertSee('ORD-10001')->assertSee('ORD-10002');
     }
 
     public function test_the_list_is_newest_first_paginated_and_keeps_the_filters(): void
@@ -55,12 +55,14 @@ class OrderManagementTest extends TestCase
 
         $this->signIn()->get(route('orders.index', ['status' => 'shipped']))
             ->assertOk()
+            ->mainContent()
             ->assertSee('12 orders match the filters')
             ->assertSee('ORD-10099')
             ->assertDontSee('ORD-10050')
             ->assertSee('status=shipped&amp;page=2', false);
 
         $this->get(route('orders.index', ['status' => 'shipped', 'page' => 2]))
+            ->mainContent()
             ->assertSee('ORD-10050')
             ->assertDontSee('ORD-10099')
             ->assertDontSee('ORD-10100');
@@ -107,6 +109,38 @@ class OrderManagementTest extends TestCase
             ->assertSessionHasErrors('status');
 
         $this->assertSame('pending', $order->refresh()->status);
+    }
+
+    public function test_each_order_in_the_list_links_to_its_details_page(): void
+    {
+        $order = Order::factory()->create(['number' => 'ORD-10001']);
+
+        $this->signIn()->get(route('orders.index'))
+            ->assertOk()
+            ->assertSee('<a class="table-link" href="'.route('orders.show', $order).'">ORD-10001</a>', false);
+    }
+
+    public function test_orders_that_do_not_exist_return_not_found(): void
+    {
+        $this->signIn()->get(route('orders.show', 999999))->assertNotFound();
+        $this->patch(route('orders.status.update', 999999), ['status' => 'shipped'])->assertNotFound();
+    }
+
+    public function test_the_total_is_shown_read_only(): void
+    {
+        $order = Order::factory()->create();
+        OrderItem::factory()->for($order)->create(['unit_price' => '84.50', 'quantity' => 2]);
+
+        $html = $this->signIn()->get(route('orders.show', $order))
+            ->assertOk()
+            ->assertSee('<dd>€169.00</dd>', false)
+            ->getContent();
+
+        // The status select is the only field the administrator can change
+        // (the layout's top bar search box is not part of the order page).
+        $this->assertSame(0, preg_match_all('/<(input|textarea)\b(?![^>]*(type="hidden"|id="topbar-search"))/', $html));
+        $this->assertSame(1, preg_match_all('/<select\b/', $html));
+        $this->assertStringContainsString('name="status"', $html);
     }
 
     public function test_the_total_adds_up_every_item_with_decimal_prices(): void

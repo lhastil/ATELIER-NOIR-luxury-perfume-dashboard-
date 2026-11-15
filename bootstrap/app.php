@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->append(PreventSearchIndexing::class);
 
+        // Signed-in users who open the login page go to their own start page
+        // (Sellers have no dashboard).
+        $middleware->redirectUsersTo(fn (Request $request) => $request->user()?->homeUrl() ?? '/');
+
         // Behind a hosting proxy that handles HTTPS, such as Vercel, set the host
         // environment variable TRUSTED_PROXIES=* so links and the client IP used
         // for login throttling come from the proxy's headers. Leave it unset

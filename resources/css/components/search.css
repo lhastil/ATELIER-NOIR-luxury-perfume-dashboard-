@@ -1,0 +1,63 @@
+/*
+ * Global search results (resources/views/search/_results.blade.php), shown on
+ * the search page and in the top bar dropdown. Built on the dropdown styles.
+ */
+.search-results {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.search-results__note {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+}
+
+.search-results__heading {
+    margin-bottom: var(--space-1);
+    padding-inline: var(--space-3);
+    font-size: var(--text-2xs);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+}
+
+.search-results__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.search-result {
+    display: grid;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.search-result:hover,
+.search-result:focus-visible {
+    background: var(--color-hover);
+}
+
+.search-result__label {
+    font-size: var(--text-sm);
+    overflow-wrap: anywhere;
+}
+
+.search-result__detail {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    overflow-wrap: anywhere;
+}
+
+/* The dropdown below the top bar field: wider than a menu, and scrolls if long. */
+.search-dropdown {
+    width: 24rem;
+    max-width: min(24rem, calc(100vw - 2 * var(--content-padding)));
+    max-height: min(32rem, 70vh);
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-2);
+}

@@ -111,6 +111,38 @@ class DashboardTest extends TestCase
         $this->assertMatchesRegularExpression('#Total Orders</p>\s*<p class="stat-card__value">7</p>#', $html);
     }
 
+    public function test_the_revenue_total_matches_the_order_totals_exactly(): void
+    {
+        // Prices whose float value times 100 is not a whole number (0.29 * 100 = 28.999…).
+        $this->orderWith('delivered', '2026-10-05', [['0.29', 3], ['0.57', 7], ['1.15', 1], ['19.99', 5], ['0.01', 1]]);
+        $this->orderWith('delivered', '2024-01-15', [['84.50', 2]]);
+        // A delivered order without items still counts as a delivered order, adding nothing.
+        $this->orderWith('delivered', '2026-09-01', []);
+        $this->orderWith('cancelled', '2026-10-06', [['0.29', 100]]);
+
+        // The previous calculation: every delivered order loaded with its items and summed in PHP.
+        $expected = Order::delivered()->with('items')->get()->sum('total_cents');
+        $this->assertSame(87 + 399 + 115 + 9995 + 1 + 16900, $expected);
+
+        $this->dashboard()
+            ->assertViewHas('revenueCents', $expected)
+            ->assertViewHas('deliveredOrderCount', 3);
+
+        $this->assertMatchesRegularExpression('#Total Revenue</p>\s*<p class="stat-card__value">€274.97</p>\s*<p class="stat-card__hint">From 3 delivered orders</p>#', $this->mainContent());
+    }
+
+    public function test_without_delivered_orders_the_revenue_and_count_are_zero(): void
+    {
+        $this->orderWith('pending', '2026-10-05', [['84.50', 2]]);
+        $this->orderWith('cancelled', '2026-10-05', [['128.00', 1]]);
+
+        $this->dashboard()
+            ->assertViewHas('revenueCents', 0)
+            ->assertViewHas('deliveredOrderCount', 0);
+
+        $this->assertMatchesRegularExpression('#Total Revenue</p>\s*<p class="stat-card__value">€0.00</p>\s*<p class="stat-card__hint">No delivered orders yet</p>#', $this->mainContent());
+    }
+
     public function test_the_revenue_chart_covers_six_months_with_empty_months_as_zero(): void
     {
         $this->travelTo('2026-10-21 12:00:00');

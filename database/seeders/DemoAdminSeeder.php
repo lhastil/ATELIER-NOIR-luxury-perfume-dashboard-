@@ -27,9 +27,12 @@ class DemoAdminSeeder extends Seeder
             return;
         }
 
-        User::updateOrCreate(
+        $user = User::updateOrCreate(
             ['email' => self::EMAIL],
             ['name' => 'Demo Administrator', 'password' => Hash::make(self::PASSWORD)],
         );
+
+        // The role is not mass assignable; the demo account has full access.
+        $user->forceFill(['role' => User::STORE_MANAGER])->save();
     }
 }

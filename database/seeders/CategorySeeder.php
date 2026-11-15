@@ -6,9 +6,9 @@ use App\Models\Category;
 use Illuminate\Database\Seeder;
 
 /**
- * The perfume families products are grouped by. Categories are not managed in
- * the panel, so this seeder also provides them on a fresh installation.
- * Running it again leaves existing categories untouched.
+ * The default perfume families products are grouped by, provided on a fresh
+ * installation. Administrators can add, rename or delete categories in the
+ * panel afterwards. Running it again leaves existing categories untouched.
  */
 class CategorySeeder extends Seeder
 {

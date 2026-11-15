@@ -23,7 +23,7 @@
             'Last order',
         ]">
             @foreach ($customers as $customer)
-                <tr>
+                <tr class="table-row--record">
                     <td>
                         <a class="table-link" href="{{ route('customers.show', $customer) }}">{{ $customer->name }}</a>
                         <span class="table-meta">{{ $customer->email }}</span>

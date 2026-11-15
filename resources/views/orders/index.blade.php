@@ -39,10 +39,14 @@
             'Status',
         ]">
             @foreach ($orders as $order)
-                <tr>
+                <tr class="table-row--record">
                     <td><a class="table-link" href="{{ route('orders.show', $order) }}">{{ $order->number }}</a></td>
                     <td>
-                        <a class="table-link" href="{{ route('customers.show', $order->customer) }}">{{ $order->customer->name }}</a>
+                        @can('access-customers')
+                            <a class="table-link" href="{{ route('customers.show', $order->customer) }}">{{ $order->customer->name }}</a>
+                        @else
+                            {{ $order->customer->name }}
+                        @endcan
                         <span class="table-meta">{{ $order->customer->email }}</span>
                     </td>
                     <td>{{ $order->placed_at->isoFormat('D MMM YYYY') }}</td>

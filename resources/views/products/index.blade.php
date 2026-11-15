@@ -54,7 +54,7 @@
             ['label' => 'Actions', 'hidden' => true],
         ]">
             @foreach ($products as $product)
-                <tr>
+                <tr class="table-row--record">
                     <td>
                         <div class="product-cell">
                             @if ($product->image_url)
@@ -69,7 +69,7 @@
                         </div>
                     </td>
                     <td>{{ $product->brand }}</td>
-                    <td>{{ $product->category->name }}</td>
+                    <td>{{ $product->category?->name ?? 'No category' }}</td>
                     <td class="is-numeric">{{ $product->formatted_price }}</td>
                     <td class="is-numeric">
                         @if ($product->stock === 0)

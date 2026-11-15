@@ -112,7 +112,7 @@
                     ['label' => 'Actions', 'hidden' => true],
                 ]">
                     @foreach ($recentOrders as $order)
-                        <tr>
+                        <tr class="table-row--record">
                             <td><a class="table-link" href="{{ route('orders.show', $order) }}">{{ $order->number }}</a></td>
                             <td><a class="table-link" href="{{ route('customers.show', $order->customer) }}">{{ $order->customer->name }}</a></td>
                             <td>{{ $order->placed_at->isoFormat('D MMM YYYY') }}</td>

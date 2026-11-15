@@ -1,0 +1,12 @@
+/* Messages: unread rows in the inbox and the message text. */
+.message-row--unread td,
+.message-row--unread .table-link {
+    font-weight: var(--weight-semibold);
+}
+
+/* Keeps the sender's line breaks; long words or links wrap instead of overflowing. */
+.message-body {
+    margin: 0;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}

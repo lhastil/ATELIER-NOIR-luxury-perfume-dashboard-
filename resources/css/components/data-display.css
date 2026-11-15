@@ -200,6 +200,30 @@
     text-underline-offset: 3px;
 }
 
+/*
+ * Rows that lead to an order, product or customer (.table-row--record): a faint
+ * warm tint and a hairline lift on hover, and the same while anything in the row
+ * has keyboard focus. Only the row's links and buttons are clickable, as before.
+ * Reduced motion is handled by the global rule in base.css.
+ */
+.table-row--record {
+    transition: box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.table-row--record > td {
+    transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+.table-row--record:hover,
+.table-row--record:has(:focus-visible) {
+    box-shadow: var(--shadow-sm);
+}
+
+.table-row--record:hover > td,
+.table-row--record:has(:focus-visible) > td {
+    background-color: var(--color-row-hover);
+}
+
 /* Small secondary line under a table cell's main text. */
 .table-meta {
     display: block;

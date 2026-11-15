@@ -27,6 +27,18 @@ class AuthenticationTest extends TestCase
             ->assertSee('autocomplete="current-password"', false);
     }
 
+    public function test_the_password_field_has_a_show_password_toggle(): void
+    {
+        $html = $this->get(route('login'))->assertOk()->getContent();
+
+        // The field itself is unchanged: a password input the toggle points at.
+        $this->assertMatchesRegularExpression('#<input\s+id="password"\s+class="field__input password-field__input"\s+type="password"\s+name="password"#', $html);
+        // A real, labelled button (keyboard-operable), hidden until the script reveals it.
+        $this->assertStringContainsString('<button type="button" class="icon-button password-field__toggle" aria-label="Show password" aria-controls="password" hidden data-password-toggle>', $html);
+        $this->assertMatchesRegularExpression('#<svg class="icon"[^>]*data-password-toggle-show#', $html);
+        $this->assertMatchesRegularExpression('#<svg class="icon"[^>]*hidden[^>]*data-password-toggle-hide#', $html);
+    }
+
     public function test_signed_in_users_are_sent_from_login_to_the_dashboard(): void
     {
         $this->actingAs(User::factory()->create())
