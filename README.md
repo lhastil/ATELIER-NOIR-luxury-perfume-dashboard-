@@ -415,7 +415,9 @@ The layout has three breakpoints: desktop (1024px and up) with a persistent 248p
 
 ## License
 
-Released under the [MIT License](LICENSE). Third-party fonts, icons and the Chart.js library are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Copyright (c) 2026 Hasti Ahmadi. All rights reserved. This project is proprietary and is not open source: the source code may be viewed for personal evaluation and educational review, but it may not be used, copied, modified, distributed, published or commercially exploited without prior written permission from the copyright holder. See [LICENSE](LICENSE) for the full terms.
+
+Third-party dependencies and assets remain subject to their own licenses. Third-party fonts, icons and the Chart.js library are listed in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Known limitations
 

@@ -4,7 +4,7 @@
     "type": "project",
     "description": "ATELIER NOIR: an admin panel for a luxury perfume store, built with Laravel.",
     "keywords": ["laravel", "admin-panel", "e-commerce"],
-    "license": "MIT",
+    "license": "proprietary",
     "require": {
         "php": "^8.3",
         "laravel/framework": "^13.17",
